@@ -195,7 +195,7 @@ function to_mp4()
 	before=`usec`
 	cd /tmp/
 	printz "Converting [$file] to mp4..."
-	
+		
 	if [ $verbose -eq 0 ]; then
 		# thow ffmpeg verbose to a temp file (just in case)
 		log=`mktemp $0.XXXXXXXXXX`
@@ -219,6 +219,12 @@ function to_mp4()
 	rm $log -f
 	cd $cur_dir
 	printz "Done! Converting [$file] took [`elapsed $before`] seconds."
+	
+	# make sure the file is there
+    if [ ! -f "$dest_dir/$filename.mp4" ]; then
+        printz "The output file [$dest_dir/$filename.mp4] is not available. Something seemed to go wrong. If you want to see more details, try running this script in verbose mode."
+        exit 1
+    fi
 }
 
 #
@@ -281,6 +287,12 @@ function parse_args()
 				break;;
 		esac
 	done
+    
+    # use default in case none is found
+	if [ -z $dest_dir ]; then
+		debug "No output path selected. Using default [$default_dest_dir]..."
+		dest_dir=$default_dest_dir 
+	fi
 
 	# clean arguments used
 	shift $[ $OPTIND - 1 ]
@@ -346,12 +358,14 @@ function main()
 				printz "Done! Converting all files from [$1] folder" \
 					"took [`elapsed $f_before`] seconds."
 			else
-				printz "[$1] is neither a file or directory. Skipping..."
+			    if [ ! -z "$1"]; then
+				    printz "[$1] is neither a file or directory. Skipping..."
+				fi
 			fi
 		fi
 		shift 1
 	done
-	printz "Done! Overall process took [`elapsed $o_before`] seconds."
+	printz "Done! Overall process took [`elapsed $o_before`] second(s)."
 }
 
 # ----------------------------
