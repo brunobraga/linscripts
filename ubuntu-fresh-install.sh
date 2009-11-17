@@ -1,17 +1,33 @@
 #!/bin/bash
+#
+# File: 	ubuntu-fresh-install.sh
+#
+# Purpose:  	installation guide for my preferred applications
+#		for Ubuntu 9.10 64-bits (also works for 32-bits)
+#
+# Author: 	BRAGA, Bruno <bruno.braga@gmail.com>
+#
+# Copyright: 
+#
+#     		Licensed under the Apache License, Version 2.0 (the "License");
+#     		you may not use this file except in compliance with the License.
+#     		You may obtain a copy of the License at
+#
+#         		http://www.apache.org/licenses/LICENSE-2.0
+#
+#     		Unless required by applicable law or agreed to in writing, software
+#     		distributed under the License is distributed on an "AS IS" BASIS,
+#     		WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
+#			implied. See the License for the specific language governing 
+#			permissions and limitations under the License.
+#
+# Notes:	This file is part of the project Linscripts. More info at:
+#			http://code.google.com/p/linscripts/
+#
+# 			Bugs, issues and requests are welcome at:
+#			http://code.google.com/p/linscripts/issues/list
+#
  
-#
-# Repository: 	ubuntu-fresh-install
-#
-# Filename: 	install.sh
-#
-# Author:	Braga, Bruno
-#
-# Created:	2009/10/16
-#
-# Purpose: 	installation guide for my preferred applications
-#
-
 # ****************************************************
 # Initiate
 # ****************************************************
@@ -140,8 +156,8 @@ function remove()
 }
 
 # Inititate from updating repository
-apt-get update 
-apt-get upgrade
+apt-get update -y
+apt-get upgrade -y
 
 # store current path location
 cur_dir=`pwd`
@@ -154,6 +170,13 @@ echo2 "Cleaning up unused stuff..."
 
 # Evolution - Email Client
 remove evolution
+remove evolution-common
+remove evolution-data-server
+remove evolution-data-server-common
+remove evolution-exchange
+remove evolution-webcal
+remove evolution-indicator
+remove evolution-*
 
 # tracker - used for indexing files (never needed that)
 remove tracker 
@@ -180,7 +203,8 @@ remove ubuntuone-*
 echo "Installing preferred applications..."
 
 # Virtual Box - virtualization - better not OSE
-#install virtualbox 
+# watch-out: Ubuntu 9.04 repo points to OSE
+install virtualbox 
 
 # diff GUI
 install meld 
@@ -190,8 +214,6 @@ install grsync
 
 # thumbnail generator
 install phatch 
-#cp helpers/phatch/settings.cPickle ~/.phatch/ # conf file to include my personal action
-#cp helpers/phatch/thumbnails.phatch ~/ # my personal action
 
 # nautilus - customizing right click
 install nautilus-actions
@@ -333,6 +355,27 @@ install p7zip
 # htop - improved top command
 install htop
 
+# ****************************************************
+# Firefox Extensions
+# ****************************************************
+
+# Quick Restart
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/3559/addon-3559-latest.xpi?src=search
+
+# Firebug
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/1843/addon-1843-latest.xpi?src=search
+
+# New Tab Homepage
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/777/addon-777-latest.xpi?src=search
+
+# Youtube video Downloader
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/12642/addon-12642-latest.xpi?src=search
+
+# DownThemAll
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/201/addon-201-latest.xpi?src=search
+
+# Delicious Bookmarks
+firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442?src=search
 
 # ****************************************************
 # Manual Installation
@@ -478,16 +521,6 @@ echo2 "Done!"
 # Other stuff
 # ****************************************************
 
-
-# create terminal shortcut
-
-# redefine terminal position/size - have to do this manually (does not work from this script)
-#cat ~/.local/share/applications/gnome-terminal.desktop | sed -e "s/Exec=gnome-terminal/Exec=gnome-terminal --geometry=80x50/g"  > /home/bruno/.local/share/applications/gnome-terminal.desktop 
-
-
-# create file explorer shortcut
-
-
 # Set crash report to enabled
 sed 's/enabled\=0/enabled\=1/' /etc/default/apport > /etc/default/apport 
 
@@ -495,21 +528,18 @@ sed 's/enabled\=0/enabled\=1/' /etc/default/apport > /etc/default/apport
 gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown -t bool true
 
 # Fix iBus issues (maybe will need to manually add to startup)
-echo '' >> ~/.bashrc
-echo '# fix iBus issues on start' >> ~/.bashrc
-echo 'export GTK_IM_MODULE=ibus' >> ~/.bashrc
-echo 'export XMODIFIERS=@im=ibus' >> ~/.bashrc
-echo 'export QT_IM_MODULE=ibus' >> ~/.bashrc
+echo '
+# fix iBus issues on start
+export GTK_IM_MODULE=ibus 
+export XMODIFIERS=@im=ibus
+export QT_IM_MODULE=ibus' >> ~/.bashrc
 
 # add functionality for progress indicator with cp/mv commands
-echo '#!/bin/bash' >> ~/.bash_aliases
-echo '' >> ~/.bash_aliases
-echo '# add progress to cp/mv commands' >> ~/.bash_aliases
-echo "alias rscp='rsync -aP –no-whole-file –inplace'" >> ~/.bash_aliases
-echo "alias rsmv='rscp –remove-source-files'" >> ~/.bash_aliases
-
-
-
+echo $'#!/bin/bash 
+# add progress to cp/mv commands 
+alias rscp=\'rsync -aP –no-whole-file –inplace\'
+alias rsmv=\'rscp –remove-source-files\'' >> ~/.bash_aliases
+# just to fix text highlighting\'
 
 # ****************************************************
 # ****************************************************
@@ -520,6 +550,4 @@ apt-get clean
 apt-get autoremove
 
 echo "Done!"
-
-# System Cleanup
 exit 0
