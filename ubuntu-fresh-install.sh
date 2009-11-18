@@ -157,7 +157,15 @@ continue."
 	echo
 }
 
-
+#
+# Function: 	file_sed
+#
+# Purpose: 	replaces content in a file by the use of sed command. 
+#
+# Args:		(1) file to be updated
+#		
+#		(2) the sed expression (eg. 's/a/b/')
+#
 function file_sed()
 {
 	file=$1
@@ -171,6 +179,13 @@ function file_sed()
 file, located at [$file_old]."
 }
 
+#
+# Function: 	comment_file
+#
+# Purpose: 	Places a # in every line of the file (useful for bash scritps)
+#
+# Args:		(1) file to be updated
+#		
 function comment_file()
 {
 	file=$1
@@ -528,10 +543,10 @@ echo2 "Decresing swap for memory opmization (updating /etc/sysctl.conf file)..."
 echo "vm.swappiness=10" >> /etc/sysctl.conf
 echo2 'Done!'
 
-echo2 "DANGEROUS: This will update the /etc/ffstab file..."
-cp /etc/default/grub /etc/default/grub.old
+# File system speed (disable access write to files/dirs)
+echo2 "DANGEROUS: This will update the /etc/fstab file..."
 file_sed /etc/fstab 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
-\-ro\,data\=writeback/g'
+\-ro/g'
 
 # turn menu displaying faster
 echo2 "Creating file [~/.gtkrc-2.0] to make menus faster..."
