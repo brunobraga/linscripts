@@ -13,19 +13,20 @@
 #     		you may not use this file except in compliance with the License.
 #     		You may obtain a copy of the License at
 #
-#         		http://www.apache.org/licenses/LICENSE-2.0
+#         	http://www.apache.org/licenses/LICENSE-2.0
 #
-#     		Unless required by applicable law or agreed to in writing, software
-#     		distributed under the License is distributed on an "AS IS" BASIS,
-#     		WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
-#			implied. See the License for the specific language governing 
-#			permissions and limitations under the License.
+#     		Unless required by applicable law or agreed to in writing, 
+#     		software distributed under the License is distributed on an 
+#     		"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,  
+#		either express or implied. See the License for the specific  
+#		language governing permissions and limitations under the 
+#		License.
 #
 # Notes:	This file is part of the project Linscripts. More info at:
-#			http://code.google.com/p/linscripts/
+#		http://code.google.com/p/linscripts/
 #
-# 			Bugs, issues and requests are welcome at:
-#			http://code.google.com/p/linscripts/issues/list
+# 		Bugs, issues and requests are welcome at:
+#		http://code.google.com/p/linscripts/issues/list
 #
  
 # ****************************************************
@@ -40,8 +41,6 @@ if [ $USER != root ]; then
 	exit 1
 fi
 
-# update repository list
-#apt-get update
 
 # ****************************************************
 # Helper Functions
@@ -68,7 +67,8 @@ function elapsed()
 {
 	# make sure this function is called with arguments
 	if [ -z $1 ]; then
-		echo2 "Function elapsed() requires previous unix date as argument to continue."
+		echo2 "Function elapsed() requires previous unix date as \
+argument to continue."
 		echo2 "Exiting this script with error..."
 		exit 1	
 	fi
@@ -96,23 +96,22 @@ function echo2()
 # Purpose: 	simple `apt-get install` command call with properly
 #		defined arguments:
 #
-#			-y 			automatically attibute "Yes" to 
-#						confirmation questions
+#		-y 			automatically attibute "Yes" to 
+#					confirmation questions
 #
-#			-f 			fix broken dependencies, if any 
+#		-f 			fix broken dependencies, if any 
 #
-#			--force-yes		dangerous, but necessary to diminuish
-#						prompting interruptions.
+#		--force-yes		dangerous, but necessary to diminuish
+#					prompting interruptions.
 #			
-#			--install-recommends	automat[ ! -d ~/.icons ] && mkdir ~/.icons
-ically install related
-#						and recommended packages altogether.
+#		--install-recommends	automat[ ! -d ~/.icons ] && mkdir #					and recommended packages altogether.
 #
 function install()
 {
 	# make sure this function is called with arguments
 	if [ -z $1 ]; then
-		echo2 "Function install() requires package name as argument to continue."
+		echo2 "Function install() requires package name as argument to \
+continue."
 		echo2 "Exiting this script with error..."
 		exit 1	
 	fi
@@ -121,24 +120,26 @@ function install()
 	package_name=$1
 	echo2 "Starting to install package [$package_name]..."
 	apt-get install -y --force-yes -f --install-recommends $package_name
-	echo2 "Successfully installed package [$package_name]. This process took [`elapsed $before`] seconds."
+	echo2 "Successfully installed package [$package_name]. This process \
+took [`elapsed $before`] seconds."
 	echo
 }
 
 #
 # Function: 	remove
 #
-# Purpose: 	simple `apt-get remove` (and autoremove) command call with properly
-#		defined arguments:
+# Purpose: 	simple `apt-get remove` (and autoremove) command call 
+# 		with properly defined arguments:
 #
-#			-y 			automatically attibute "Yes" to 
-#						confirmation questions
+#			-y 	automatically attibute "Yes" to 
+#				confirmation questions
 #
 function remove()
 {
 	# make sure this function is called with arguments
 	if [ -z $1 ]; then
-		echo2 "Function remove() requires package name as argument to continue."
+		echo2 "Function remove() requires package name as argument to \
+continue."
 		echo2 "Exiting this script with error..."
 		exit 1	
 	fi
@@ -151,8 +152,35 @@ function remove()
 	# system cleanup
 	apt-get autoremove -y
 
-	echo2 "Successfully removed package [$package_name]. This process took [`elapsed $before`] seconds."
+	echo2 "Successfully removed package [$package_name]. This process took \
+[`elapsed $before`] seconds."
 	echo
+}
+
+
+function file_sed()
+{
+	file=$1
+	file_old=$file.old
+	sed_expr=$2
+	echo2 "Updating file [$file]..."
+	cp $file $file_old
+	exec 3<> $file; cat <&3 | sed -e $sed_expr >&3; exec 3>&-
+	echo2 'Done!'
+	echo2 "Note: In case of any problem, you can revert to the original \
+file, located at [$file_old]."
+}
+
+function comment_file()
+{
+	file=$1
+	file_old=$file.old
+	echo2 "Commenting file [$file]..."
+	cp $file $file_old
+	exec 3<> $file; cat <&3 | awk '{ print "#"$0 }' >&3; exec 3>&-
+	echo2 'Done!'
+	echo2 "Note: In case of any problem, you can revert to the original \
+file, located at [$file_old]."
 }
 
 # Inititate from updating repository
@@ -187,7 +215,7 @@ remove tracker-utils
 remove wine
 echo2 "Trying to delete Wine folder..."
 rm -rfv ~/.wine/ 2>/dev/null
-echo2 "Done!"
+echo2 'Done!'
 
 
 # Mono - Microsoft dependencies
@@ -312,7 +340,7 @@ install libextutils-depends-perl
 install libextutils-pkgconfig-perl # 1. Install Perl ExtUtils dependencies
 install libsexy2 
 libsexyinstall -dev # 2. Install Libsexy, including header file
-perl -MCPAN -e 'install Gtk2::Sexy' # 3. Install Gtk2-Sexy, the Perl bindings for Libsexy
+perl -MCPAN -e 'install Gtk2::Sexy' # 3. Install Gtk2-Sexy, binding for Libsexy
 perl -MCPAN -e 'install Crypt::Simple' # 4. Install Crypt:Simple
 echo2 "Done. This process took [`elapsed $before`] seconds."
 echo
@@ -321,10 +349,6 @@ echo
 # Ubuntu Tweaks
 # http://ubuntu-tweak.com/downloads
 install ubuntu-tweak
-
-# ClamAV (antivirus)
-install clamav 
-install clamtk
 
 # Helper for boot performance
 install bootchart
@@ -360,32 +384,39 @@ install htop
 # ****************************************************
 
 # Quick Restart
-firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/3559/addon-3559-latest.xpi?src=search
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/3559/\
+addon-3559-latest.xpi
 
 # Firebug
-firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/1843/addon-1843-latest.xpi?src=search
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/1843/\
+addon-1843-latest.xpi
 
 # New Tab Homepage
-firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/777/addon-777-latest.xpi?src=search
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/777/\
+addon-777-latest.xpi
 
 # Youtube video Downloader
-firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/12642/addon-12642-latest.xpi?src=search
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/12642/\
+addon-12642-latest.xpi
 
 # DownThemAll
-firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/201/addon-201-latest.xpi?src=search
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/201/\
+addon-201-latest.xpi
 
 # Delicious Bookmarks
-firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442?src=search
+firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442
 
 # ****************************************************
 # Manual Installation
 # ****************************************************
 
-# Mac4Lin (turn ubuntu into a Mac style desktop) - not working properly for Ubuntu 9.10
+# Mac4Lin (turn ubuntu into a Mac style desktop) 
+#not working properly for Ubuntu 9.10
 #before=`usec`
 #echo2 "Installing [Mac4Lin Packages]..."
 #cd /tmp/
-#wget http://sourceforge.net/projects/mac4lin/files/mac4lin/ver.1.0/Mac4Lin_v1.0.tar.gz/download
+#wget http://sourceforge.net/projects/mac4lin/files/mac4lin/ver.1.0/\
+#Mac4Lin_v1.0.tar.gz/download
 #tar -zxvf Mac4Lin_v1.0.tar.gz
 #cd Mac4Lin_v1.0
 #[ ! -d ~/.icons ] && mkdir ~/.icons
@@ -434,7 +465,10 @@ install libfaad-dev
 cd /tmp/
 svn checkout svn://svn.ffmpeg.org/ffmpeg/trunk ffmpeg
 cd ffmpeg
-./configure --enable-gpl --enable-nonfree --enable-libvorbis --enable-libdc1394 --enable-libgsm --disable-debug --enable-libmp3lame --enable-libfaad --enable-libfaac --enable-libxvid --enable-pthreads --enable-libx264
+./configure --enable-gpl --enable-nonfree --enable-libvorbis \
+--enable-libdc1394 --enable-libgsm --disable-debug --enable-libmp3lame \
+--enable-libfaad --enable-libfaac --enable-libxvid --enable-pthreads \
+--enable-libx264
 make
 make install
 cd $cur_dir
@@ -457,7 +491,8 @@ echo
 before=`usec`
 echo2 "Installing [Flash plugin for mozilla]..."
 cd /tmp/
-wget http://download.macromedia.com/pub/labs/flashplayer10/libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
+wget http://download.macromedia.com/pub/labs/flashplayer10/\
+libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 tar -zxvf libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 cp libflashplayer.so /usr/lib/mozilla/plugins/
 cd $cur_dir
@@ -471,43 +506,37 @@ echo
 
 # Performace: Grub timeout
 echo2 "Editing grub file... (setting timeout to 2 seconds)"
-cp /etc/default/grub /etc/default/grub.old
-cat /etc/default/grub | sed -e 's/GRUB_TIMEOUT\=\"*.[0-9]\"/GRUB_TIMEOUT\=\"2\"/' > /etc/default/grub
+file_sed /etc/default/grub 's/GRUB_TIMEOUT\=\"*.[0-9]\"/GRUB_TIMEOUT\=\"2\"/'
 echo2 "Updating grub..."
 update-grub
-echo2 "Done!"
-echo2 "Note: In case of any problem, revert the original file, renamed to [grub.old]."
 
 # Performance: Disable excessive ttys
 echo2 "Disabling excessive TTYs for peformance..."
+file_sed /etc/default/console-setup \ 's/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-6\]\
+\"/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-2\]\"/'
 echo2 "Disabling tty3..."
-cp /etc/init/tty3.conf /etc/init/tty3.conf.old
-cat /etc/init/tty3.conf | awk '{ print "#"$1 }' > /etc/init/tty3.conf
+comment_file /etc/init/tty3.conf
 echo2 "Disabling tty4..."
-cp /etc/init/tty4.conf /etc/init/tty4.conf.old
-cat /etc/init/tty4.conf | awk '{ print "#"$1 }' > /etc/init/tty4.conf
+comment_file /etc/init/tty4.conf
 echo2 "Disabling tty5..."
-cp /etc/init/tty5.conf /etc/init/tty5.conf.old
-cat /etc/init/tty5.conf | awk '{ print "#"$1 }' > /etc/init/tty5.conf
+comment_file /etc/init/tty5.conf
 echo2 "Disabling tty6..."
-cp /etc/init/tty6.conf /etc/init/tty6.conf.old
-cat /etc/init/tty6.conf | awk '{ print "#"$1 }' > /etc/init/tty6.conf
-echo2 "Done!"
-echo2 "Note: In case of any problem, revert the original files, renamed to [ttyN.conf.old]."
+comment_file /etc/init/tty6.conf
 
 # Performance: Decrease Swappiness for better RAM memory usage
 echo2 "Decresing swap for memory opmization (updating /etc/sysctl.conf file)..."
 echo "vm.swappiness=10" >> /etc/sysctl.conf
-echo2 "Done!"
+echo2 'Done!'
 
 echo2 "DANGEROUS: This will update the /etc/ffstab file..."
-cat /etc/fstab | sed -e 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\-ro\,data\=writeback/g' > /etc/fstab
-echo2 "Done!"
+cp /etc/default/grub /etc/default/grub.old
+file_sed /etc/fstab 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
+\-ro\,data\=writeback/g'
 
 # turn menu displaying faster
 echo2 "Creating file [~/.gtkrc-2.0] to make menus faster..."
-echo "gtk-menu-popup-delay=0" > ~/.gtkrc-2.0
-echo2 "Done!"
+echo "gtk-menu-popup-delay=0" >> ~/.gtkrc-2.0
+echo2 'Done!'
 
 # impove network
 echo2 "Updating settings for network connection..."
@@ -515,17 +544,18 @@ echo "net.ipv4.tcp_timestamps = 0" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_sack = 1" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_no_metrics_save = 1" >> /etc/sysctl.conf
 echo "net.core.netdev_max_backlog = 2500" >> /etc/sysctl.conf
-echo2 "Done!"
+echo2 'Done!'
 
 # ****************************************************
 # Other stuff
 # ****************************************************
 
 # Set crash report to enabled
-sed 's/enabled\=0/enabled\=1/' /etc/default/apport > /etc/default/apport 
+file_sed /etc/default/apport 's/enabled\=0/enabled\=1/'
 
 # Disable confirmation time for logout/shutdown
-gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown -t bool true
+gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown \
+-t bool true
 
 # Fix iBus issues (maybe will need to manually add to startup)
 echo '
@@ -549,5 +579,5 @@ echo "Cleaning up apt-get..."
 apt-get clean
 apt-get autoremove
 
-echo "Done!"
+echo 'Done!'
 exit 0
