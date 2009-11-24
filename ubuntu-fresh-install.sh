@@ -28,6 +28,20 @@
 # 		Bugs, issues and requests are welcome at:
 #		http://code.google.com/p/linscripts/issues/list
 #
+
+# ****************************************************
+# CONFIGURABLE SETTINGS: BEGIN
+# ****************************************************
+
+#
+# Define the directory to store the sources of components that require
+# manual compilation or installation. Recommended path is "/usr/local/src/"
+# but you can change it according to your needs.
+src_dir=/usr/local/src/
+
+# ****************************************************
+# CONFIGURABLE SETTINGS: END
+# ****************************************************
  
 # ****************************************************
 # Initiate
@@ -344,7 +358,15 @@ install inkscape
 
 # desktop screenshot
 # http://shutter-project.org/downloads/
+echo "Adding [shutter] repository sources..."
 wget -q http://shutter-project.org/shutter-ppa.key -O- |  apt-key add -
+echo '
+# Shutter application sources
+deb http://ppa.launchpad.net/shutter/ppa/ubuntu jaunty main
+deb-src http://ppa.launchpad.net/shutter/ppa/ubuntu jaunty main
+' >> /etc/apt/sources.list
+echo "Updating sources..."
+apt-get update
 install shutter
 
 # gmail check tool
@@ -457,7 +479,7 @@ echo
 # x264 encoder for FFMpeg
 before=`usec`
 echo2 "Installing [x264 Packages]..."
-cd /tmp/
+cd $src_dir
 git clone git://git.videolan.org/x264.git x264
 cd x264/
 ./configure --prefix=/usr/local --enable-pthread --disable-asm
@@ -477,7 +499,7 @@ install blame-dev
 install libxvidcore-dev
 install libfaac-dev
 install libfaad-dev
-cd /tmp/
+cd $src_dir
 svn checkout svn://svn.ffmpeg.org/ffmpeg/trunk ffmpeg
 cd ffmpeg
 ./configure --enable-gpl --enable-nonfree --enable-libvorbis \
@@ -510,6 +532,21 @@ wget http://download.macromedia.com/pub/labs/flashplayer10/\
 libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 tar -zxvf libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 cp libflashplayer.so /usr/lib/mozilla/plugins/
+cd $cur_dir
+echo2 "Done. This process took [`elapsed $before`] seconds."
+echo
+
+
+before=`usec`
+echo2 "Installing [Google App Engine]..."
+install python2.5
+cd $src_dir
+wget http://googleappengine.googlecode.com/files/google_appengine_1.2.7.zip
+unzip google_appengine_1.2.7.zip
+# fix python version
+cd google_appengine
+file_sed dev_appserver.py "s/\#\!\/usr\/bin\/env\ python/\#\!\/usr\/bin\/env\ \
+python2.5/"
 cd $cur_dir
 echo2 "Done. This process took [`elapsed $before`] seconds."
 echo

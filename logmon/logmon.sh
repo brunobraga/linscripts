@@ -142,7 +142,8 @@ function printz()
 #
 # Function:     debug
 #
-# Purpose:      similar to printz, but only eecuted if _verbose env variable is on. 
+# Purpose:      similar to printz, but only eecuted if _verbose env 
+#               variable is on. 
 #
 # Arguments:    [text]      the text to e printed on stdout by printz function
 #
@@ -163,7 +164,7 @@ function debug()
 #               comes to the log file)
 #
 # Arguments:    [src]      the source name (data coming from the monitored file)
-#               [msg]      the message info (data coming from the monitored file)
+#               [msg]      the message info 
 #
 function ignore()
 {
@@ -184,7 +185,8 @@ function ignore()
     if [ ! -z "$src_ignore_regex" ]; then
         if [ ! -z `echo $src | egrep -i "$src_ignore_regex"` ]; then
             _ignore=on
-            debug "Ignoring source [$src] due to regex filter [$src_ignore_regex]."
+            debug "Ignoring source [$src] due to regex filter \
+[$src_ignore_regex]."
         fi
     fi
 
@@ -192,7 +194,8 @@ function ignore()
     if [ ! -z "$msg_ignore_regex" ]; then
         if [ ! -z "`echo $msg | egrep -i "$msg_ignore_regex"`" ]; then
             _ignore=on
-            debug "Ignoring message [$msg] due to regex filter [$msg_ignore_regex]."
+            debug "Ignoring message [$msg] due to regex filter \
+[$msg_ignore_regex]."
         fi
     fi
 
@@ -210,8 +213,9 @@ function ignore()
 #
 # Note:         Reference http://bash-hackers.org/wiki/doku.php/howto/conffile
 #
-# Important:    The configuration file is hard-coded defined (some special places)
-#               within this function. Possible locations (searched in that order):
+# Important:    The configuration file is hard-coded defined (some special 
+#               places) within this function. Possible locations (searched in
+#               that order):
 #                   - ./{this script name}.cfg (same directory of the script)
 #
 function read_config()
@@ -220,7 +224,8 @@ function read_config()
 
     # make sure the file is there
     if [ -z "$configfile" ]; then
-        echo "ERROR: Missing config file. Can not continue... Try --help for more details."
+        echo "ERROR: Missing config file. Can not continue... Try --help for \
+more details."
         exit 1
     fi
 
@@ -254,7 +259,8 @@ function read_config()
 
 
     # make sure ALL settings are ok!
-    if [ -z "$mail_host" -o -z "$mail_from" -o -z "$mail_to" -o -z "$stop_dir" -o ! -d "$stop_dir" ]; then
+    if [ -z "$mail_host" -o -z "$mail_from" -o -z "$mail_to" -o -z "$stop_dir" \
+-o ! -d "$stop_dir" ]; then
         echo "ERROR: Some settings in [$_app_name.cfg] are missing or invalid."
         exit 1    
     fi
@@ -310,7 +316,8 @@ function parse_args()
 				exit 0;;
 			*) 	# ignore -- separator
 				if [ "$1" != "--" ]; then
-					echo "ERROR: Invalid option: [$1]. Try --help for more details."
+					echo "ERROR: Invalid option: [$1]. Try --help for more \
+details."
 					exit 1
 				fi
 				shift 1
@@ -352,7 +359,8 @@ function main()
     fi
     # make sure we have something to look for
     if [ -z "$_log" ]; then
-        echo "ERROR: No file specified, neither default is set in $_app_name.cfg. Can not continue..."
+        echo "ERROR: No file specified, neither default is set in \
+$_app_name.cfg. Can not continue..."
         exit 1
     fi
     
@@ -364,7 +372,7 @@ function main()
 
     logger -t "$0" "Script started. Checking [$_log]."
 
-    tail -f -n 1 $_log | \
+    tail --follow=name --retry -n 1 $_log | \
     {
         while read month day time host source message; do
             if [ -f "$stop_cmd" ]; then
