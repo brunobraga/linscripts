@@ -36,7 +36,7 @@ set -o pipefail # force errors to continue on pipes
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.1-beta
+_version=0.11
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
@@ -45,36 +45,51 @@ _version=0.1-beta
 _app_name=`basename $0 .sh`
 _app_dir=`dirname $0`
 _verbose=off
+_ignore_regex=
 _ignore=off
 _log=
+_exec=
 
 function usage()
 {
     cat << EOF
-Usage: logmon [OPTIONS] [logfile]
+Usage: logmon [OPTIONS] [exec] [logfile]
 
 Script that keeps constantly (same concept of tail+follow) monitoring 
-certain log file, and sends information through email to a defined
-recipient.
-    Note: See also configuration file, located at: ./logmon.cfg
+certain log file, and executes certain action informed in the arguments.
 
 Arguments:
+  [exec]      the action(s) to be taken upon new entries in logfile,
+              being transferred by piping (eg. send email, notify external 
+              source, etc). See example. This argument is mandatory.
+              The custom values can dynamically added to the action script:
+                    __APP__: this script name
+                    __LOG__: the log file being monitored (complete path)
+                    __SRC__: the source information being logged in file 
+
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
+              If not used, the default used will be "/var/log/syslog" file.
 Options:
+  -i  --ignore      the regular expression (grep) containing the matches to be 
+                    ignored by this script. Add here any keywords or patterns
+                    you want the script to skip the `--exec` action.
+                    
   -h, --help        prints this help information
+  
   -v, --verbose     more detailed data of what is going on, in case this 
                     script is not running as daemon
+                    
       --version     prints the version of this script
-Interaction:
-    The interaction between a daemon script without brute forced "kill"
-    Use the "stop" file for finishing the process of this script gracefully.
-        Example: $ touch /tmp/logmon.stop.syslog
-                (just by creating the file, the script will be 
-                 automatically self-terminated)
 
-Dependencies: sendEmail
-
+Examples:
+    # using `mail` for sending alarms by email
+    ./logmon.sh --ignore "^test$|/usr/sbin/cron|^init$" \\
+                --verbose \\
+                "mail bruno.braga@gmail.com \\
+                     -s \"__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__\"" \\
+                /var/log/syslog
+            
 Author: BRAGA, Bruno.
 
 Comments, bugs are welcome at: http://code.google.com/p/linscripts/issues/list
@@ -182,161 +197,90 @@ function ignore()
     fi
 
     # Remove unwanted sources
-    if [ ! -z "$src_ignore_regex" ]; then
-        if [ ! -z `echo $src | egrep -i "$src_ignore_regex"` ]; then
+    if [ ! -z "$_ignore_regex" ]; then
+        if [ ! -z `echo $src | egrep -i "$_ignore_regex"` ]; then
             _ignore=on
             debug "Ignoring source [$src] due to regex filter \
-[$src_ignore_regex]."
+[$_ignore_regex]."
         fi
     fi
 
     # Remove unwanted messages
-    if [ ! -z "$msg_ignore_regex" ]; then
-        if [ ! -z "`echo $msg | egrep -i "$msg_ignore_regex"`" ]; then
+    if [ ! -z "$_ignore_regex" ]; then
+        if [ ! -z "`echo $msg | egrep -i "$_ignore_regex"`" ]; then
             _ignore=on
             debug "Ignoring message [$msg] due to regex filter \
-[$msg_ignore_regex]."
+[$_ignore_regex]."
         fi
+    fi
+
+    # Remove this script messages
+    if [ ! -z "`echo $src | egrep -i "$_app_name"`" ]; then
+        _ignore=on
+        debug "Ignoring message [$msg] (owned by this script)."
     fi
 
     # affect global variable
     if [ "$_ignore" = "off" ];then
-        debug "source=[$src] msg=[$msg] seem ok (no ignore rules applicable were found)."
+        debug "source=[$src] msg=[$msg] seem ok (no ignore rules \
+applicable were found)."
     fi
 }
 
-#
-# Function:     read_config
-#
-# Purpose:      Reads a configuration file for settings that can be adapted
-#               according to the user needs.
-#
-# Note:         Reference http://bash-hackers.org/wiki/doku.php/howto/conffile
-#
-# Important:    The configuration file is hard-coded defined (some special 
-#               places) within this function. Possible locations (searched in
-#               that order):
-#                   - ./{this script name}.cfg (same directory of the script)
-#
-function read_config()
-{
-    configfile="$_app_dir/$_app_name.cfg"
 
-    # make sure the file is there
-    if [ -z "$configfile" ]; then
-        echo "ERROR: Missing config file. Can not continue... Try --help for \
+#
+# Function: validate_args
+#
+# Purpose:  validate arguments and set defaults, if applicable.
+#
+function validate_args()
+{
+    # log file
+    if [ -z "$_log" ]; then
+        _log=/var/log/syslog
+        debug "No file specified, using default [$_log]..."
+    fi
+    if [ ! -f "$_log" ]; then
+        echo [$_log]
+        echo "ERROR: Specify a valid log file to monitor. Try --help for \
 more details."
         exit 1
     fi
 
-    # in case cleanup is required, save the temp file here
-    configfile_secured="/tmp/$_app_name.cfg"
-
-    # check if the file contains something we don't want
-    regex='^$|^#|^[^ ]*='
-    if egrep -q -v "$regex" "$configfile"; then
-        debug "Config file is unclean, cleaning it..."
-        # filter the original to a new file
-        egrep "$regex" "$configfile" > "$configfile_secured"
-        configfile="$configfile_secured"
+    # ignore regex - no need
+    if [ -z "$_ignore_regex" ]; then
+        debug "No ignore regex pattern specified, monitoring all..."
     fi
 
-    # now source it, either the original or the filtered variant
-    source "$configfile"
+    # exec
+    if [ -z "$_exec" ]; then
+        echo "ERROR: Specify a command/action to be executed. Try --help for \
+more details."
+        exit 1
+    fi
+}
 
-    # update source configuration with local stuff
-    # add this script (as it also saves to syslog - avoid looping)
-    src_ignore_regex="$src_ignore_regex|$_app_name"
+
+#
+# Function: prepare_exec
+#
+# Purpose:  Replaces tags from exec argument for dynamic content handling.
+#
+# Arguments:    [src]      the source name (data coming from the monitored file)
+#
+function prepare_exec()
+{
+    src=$1
+
+    # fix / chars for sed
+    src=`echo $src | sed -e 's/\//\\\\\//g'`
+    app_name=`echo $_app_name | sed -e 's/\//\\\\\//g'`
+    log=`echo $_log | sed -e 's/\//\\\\\//g'`
     
-    debug "Reading config variables..."
-    debug "mail_host=[$mail_host]"
-    debug "mail_from=[$mail_from]"
-    debug "mail_to=[$mail_to]"
-    debug "src_ignore_regex=[$src_ignore_regex]"
-    debug "msg_ignore_regex=[$msg_ignore_regex]"
-    debug "default_log=[$default_log]"
-    debug "stop_dir=[$stop_dir]"
-
-
-    # make sure ALL settings are ok!
-    if [ -z "$mail_host" -o -z "$mail_from" -o -z "$mail_to" -o -z "$stop_dir" \
--o ! -d "$stop_dir" ]; then
-        echo "ERROR: Some settings in [$_app_name.cfg] are missing or invalid."
-        exit 1    
-    fi
-
-    # clean up temp file, if applicable
-    if [ -f "$configfile_secured" ]; then 
-        rm -f $configfile_secured 2>/dev/null
-    fi
-}
-
-# 
-# Function: check_dependencies
-#
-function check_dependencies()
-{
-    debug "Checking dependencies..."
-    if [ -z "`which sendEmail`" ]; then
-        echo "ERROR: Command [sendEmail] not found. You need to install it \
-before using this script. See also --help for details."
-        exit 1
-    fi
-}
-
-
-#
-# Function: 	parse_args
-#
-# Purpose: 		parses the input arguments and options and prepare the data
-#				to be used within this code.
-#
-# Arguments:	the entire argument information from the script calling ($@)
-#
-# Notes: 		This function will set the env variables: _verbose. 
-#
-function parse_args()
-{
-	# fix options order
-	args=`getopt -o hv -l help,verbose,version -- "$@"` || (( usage && exit 1 )) 
-
-	eval set -- "$args"
-
-	# loop options and fill variables accordingly
-	while [ $# -gt 0 ]; do
-		case $1 in
-			--help | -h)
-				usage
-				exit 0;;
-			--verbose | -v)
-				_verbose=on
-				shift 1;;
-			--version)
-				version
-				exit 0;;
-			*) 	# ignore -- separator
-				if [ "$1" != "--" ]; then
-					echo "ERROR: Invalid option: [$1]. Try --help for more \
-details."
-					exit 1
-				fi
-				shift 1
-				break;;
-		esac
-	done
-
-	# clean arguments used
-	shift $[ $OPTIND - 1 ]
-
-    # set the remaining arguments
-    file_arg=$@
-
-    if [ ! -z "$file_arg" -a ! -f "$file_arg" ]; then
-        echo "ERROR: Specify a valid log file to monitor. Try --help for more details."
-        exit 1
-    else
-        _log=$file_arg
-    fi
+    # substitute string in exec accordingly
+    _exec=`echo $_exec | sed -e "s/__APP__/$app_name/g"`
+    _exec=`echo $_exec | sed -e "s/__LOG__/$log/g"`
+    _exec=`echo $_exec | sed -e "s/__SRC__/$src/g"`
 }
 
 #
@@ -346,23 +290,10 @@ details."
 #
 function main()
 {
-    parse_args $@
 
-    check_dependencies
+    validate_args
 
-    read_config 
-
-    # fix no arguments case
-    if [ -z "$_log" ]; then
-        _log=$default_log
-        debug "No file specified, using default [$_log]..."
-    fi
-    # make sure we have something to look for
-    if [ -z "$_log" ]; then
-        echo "ERROR: No file specified, neither default is set in \
-$_app_name.cfg. Can not continue..."
-        exit 1
-    fi
+    # everything seems ok, starting script
     
     debug "Preparing to monitor [$_log]..."
 
@@ -375,39 +306,77 @@ $_app_name.cfg. Can not continue..."
     tail --follow=name --retry -n 1 $_log | \
     {
         while read month day time host source message; do
-            if [ -f "$stop_cmd" ]; then
-                rm -f "$stop_cmd"
-                logger -t "$0" "Script stopped for [$_log]."
-                debug "Found stop file. Exiting..."
-                exit 0
-            else
-                debug "Found new entry in [$_log]."
-                source=`fix_source "$source"`
-                ignore "$source" "$message"
-			    if [ "$_ignore" = "off" ]; then
-                    year=`date +%Y`
-                    title="Syslog Alarm [$host]: $_log $source"
-                    debug "Found new alarm. Sending email [$title]..."
-                    echo -e "New information in [$_log] log file: \n \
+            debug "Found new entry in [$_log]."
+            source=`fix_source "$source"`
+            ignore "$source" "$message"
+		    if [ "$_ignore" = "off" ]; then
+                year=`date +%Y`
+                prepare_exec $source
+                debug "Found new alarm. Executing action [$_exec] for source \
+[$source]..."
+                echo -e "New entry in [$_log] log file: \n \
 \n   Date: [`date -d \"$month $day $year $time\" +\"%Y-%m-%d %H:%M:%S\"`] \
 \n   Host: [$host] \
 \n Source: [$source] \
 \nMessage: [$message]. \
-\n\nAlarm generated by [$0], running at [$HOSTNAME] as user [$USERNAME]." | \
-sendEmail -q -s $mail_host \
-          -f $mail_from \
-          -t $mail_to \
-         -u $title \
- && debug "Successfully sent email to [$mail_to]." \
- || logger -t "$0" "Unable to send alarm via Email."
-                fi
+\n\nAlarm generated by [$0] ($$), running at [$HOSTNAME] as user \
+[$USERNAME]." | $_exec && debug "Successfully executed action [$_exec] for \
+source [$source]." || logger -t "$0" "Unable to execute action [$_exec]."
             fi
             debug "Waiting for new events on [$_log]..."
         done
     }
 }
 
-main $@
+# ---------
+# Main Code
+# ---------
+
+# fix options order
+args=`getopt -o hvi: -l help,verbose,version,ignore: -- "$@"` || \
+( usage && exit 1 )
+
+eval set -- "$args"
+
+# loop options and fill variables accordingly
+while [ $# -gt 0 ]; do
+	case $1 in
+		--help | -h)
+			usage
+			exit 0;;
+		--ignore | -i)
+			if [ "$2" == "--" ]; then
+				echo "ERROR: Invalid option: [$1]. Try --help for more \
+details."
+				exit 1
+			fi
+			_ignore_regex=$2
+			shift 2;;
+		--verbose | -v)
+			_verbose=on
+			shift 1;;
+		--version)
+			version
+			exit 0;;
+		*) 	# ignore -- separator
+			if [ "$1" != "--" ]; then
+				echo "ERROR: Invalid option: [$1]. Try --help for more \
+details."
+				exit 1
+			fi
+			shift 1
+			break;;
+	esac
+done
+
+# clean arguments used
+shift $[ $OPTIND - 1 ]
+
+# set the remaining arguments
+_exec=$1
+_log=$2
+
+main
 exit 0
 
 
