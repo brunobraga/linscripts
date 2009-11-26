@@ -241,7 +241,6 @@ function validate_args()
         debug "No file specified, using default [$_log]..."
     fi
     if [ ! -f "$_log" ]; then
-        echo [$_log]
         echo "ERROR: Specify a valid log file to monitor. Try --help for \
 more details."
         exit 1
@@ -260,6 +259,26 @@ more details."
     fi
 }
 
+function check_already_running()
+{
+    debug "Verifying if another instance of this script (with same \
+configuration is already running..."
+
+    
+    _lock=/tmp/$_app_name.`echo $_log | sed -e 's/\//_/g'`.lock
+
+    if [ -f "$_lock" ]; then
+        echo "INFO: The script [$_app_name] for log [$_log] seems to be \
+already running. Exiting with no errors..."
+        exit 0
+    else
+        # create the lock
+        touch $_lock
+
+        # remove file in abort cases
+        trap "rm -f $_lock; exit" INT TERM EXIT
+    fi
+}
 
 #
 # Function: prepare_exec
@@ -290,16 +309,15 @@ function prepare_exec()
 #
 function main()
 {
-
     validate_args
+    
+    check_already_running
 
     # everything seems ok, starting script
     
     debug "Preparing to monitor [$_log]..."
 
     _mon_name=`basename $_log .log`
-
-    stop_cmd=$stop_dir$_app_name.stop.$_mon_name
 
     logger -t "$0" "Script started. Checking [$_log]."
 

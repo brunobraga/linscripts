@@ -62,7 +62,7 @@ Usage:
                   "/var/log/syslog" file.
     Options:
     --------
-      -i  --ignore      the regular expression (grep) containing the matches to 
+      -i  --ignore      the regular expression (egrep) containing the matches to 
                         be ignored by this script. Add here any keywords or 
                         patterns you want the script to skip the `--exec` 
                         action.
@@ -93,4 +93,18 @@ Usage:
                          -t bruno.braga@gmail.com \
                          -u \"__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__\"" \
                     /var/log/syslog
+
+    Additional Info:
+    ----------------
+    
+        (1) You may run multiple instances (processes) of this script without
+            any problems, as long as they are not monitoring the same log file.
+            (this will create a lock file in /tmp/ folder to avoid this)
+            
+        (2) It is advised to run this as a background process, but you may 
+            leave running on screen and verbose mode for 
+            tracking/troubleshooting purposes.
+            Suggestion: add your script call to /etc/rc.local file to allow it
+                        to run on startup.
+    
         
