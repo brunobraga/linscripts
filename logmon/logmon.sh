@@ -80,10 +80,10 @@ Options:
 
 Examples:
     # using `mail` for sending alarms by email
-    ./logmon.sh --ignore "^test$|/usr/sbin/cron|^init$" \\
+    ./logmon.sh --ignore "^test$|/var/log/syslog|/usr/sbin/cron|^init$" \\
                 --verbose \\
                 "mail bruno.braga@gmail.com \\
-                     -s \"__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__\"" \\
+                     -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'" \\
                 /var/log/syslog
             
 Author: BRAGA, Bruno.
@@ -94,6 +94,11 @@ the project Linscripts. More info at: http://code.google.com/p/linscripts/
 EOF
 }
 
+#
+# Function:     version
+#
+# Purpose:      display current script version.
+#
 function version()
 {
     echo -e "\
@@ -342,7 +347,8 @@ function main()
                     debug "Successfully executed action [$_exec] for \
 source [$source]." 
                 else
-                    logger -t "$_mon_name" "Unable to execute action [$_exec] (Error $err)."
+                    logger -t "$_mon_name" "Unable to execute action \
+[$_exec] (Error $err)."
                 fi
             fi
             debug "Waiting for new events on [$_log]..."

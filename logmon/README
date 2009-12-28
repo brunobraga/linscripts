@@ -77,10 +77,10 @@ Usage:
     Examples:
     ---------
         # using `mail` for sending alarms by email
-        ./logmon.sh --ignore "^test$|/usr/sbin/cron|^init$" \
+        ./logmon.sh --ignore "^test$|/var/log/syslog|/usr/sbin/cron|^init$" \
                     --verbose \
                     "mail bruno.braga@gmail.com \
-                         -s \"__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__\"" \
+                         -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'" \
                     /var/log/syslog
                 
         
@@ -91,7 +91,7 @@ Usage:
                          -s localhost \
                          -f bruno.braga@localhost \
                          -t bruno.braga@gmail.com \
-                         -u \"__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__\"" \
+                         -u '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'" \
                     /var/log/syslog
 
     Additional Info:
