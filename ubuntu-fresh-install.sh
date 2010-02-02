@@ -263,6 +263,13 @@ echo "Installing preferred applications..."
 # watch-out: Ubuntu 9.04 repo points to OSE
 install virtualbox 
 
+# fix issues with max resolution size
+#VBoxManage setextradata global GUI/MaxGuestResolution 1280,800
+
+# Gedit plugins
+install gedit-plugins
+# autocomplete: 
+
 # diff GUI
 install meld 
 
@@ -297,6 +304,9 @@ install fakeroot
 install libxml-parser-perl 
 install check 
 install avahi-daemon
+
+# Python stuff
+install python2.6-dev
 
 # Java stuff
 install sun-java6-jre 

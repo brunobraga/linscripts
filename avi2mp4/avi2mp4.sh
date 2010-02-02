@@ -300,7 +300,7 @@ function parse_args()
     # set the remaining arguments
     file_args=$@
 
-    if [ -z $file_args ]; then
+    if [ -z "$file_args" ]; then
         echo "ERROR: Specify at least one file/directory to process."
         usage
         exit 1
