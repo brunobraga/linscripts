@@ -2,13 +2,13 @@
 #
 # File: 	logmon.sh
 #
-# Purpose:  constantly monitor specified log file by sending 
+# Purpose:  constantly monitor specified log file by sending
 #           email notification to pre-configured recipients.
 #			more info available in usage function (or type logmon.sh --help)
 #
 # Author: 	BRAGA, Bruno <bruno.braga@gmail.com>
 #
-# Copyright: 
+# Copyright:
 #
 #     		Licensed under the Apache License, Version 2.0 (the "License");
 #     		you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 #
 #     		Unless required by applicable law or agreed to in writing, software
 #     		distributed under the License is distributed on an "AS IS" BASIS,
-#     		WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
-#			implied. See the License for the specific language governing 
+#     		WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+#			implied. See the License for the specific language governing
 #			permissions and limitations under the License.
 #
 # Notes:	This file is part of the project Linscripts. More info at:
@@ -32,7 +32,7 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.11
+_version=0.12
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
@@ -41,6 +41,7 @@ _version=0.11
 _app_name=`basename $0 .sh`
 _app_dir=`dirname $0`
 _verbose=off
+_run_silent=off
 _ignore_regex=
 _ignore=off
 _log=
@@ -51,31 +52,36 @@ function usage()
     cat << EOF
 Usage: logmon [OPTIONS] [exec] [logfile]
 
-Script that keeps constantly (same concept of tail+follow) monitoring 
+Script that keeps constantly (same concept of tail+follow) monitoring
 certain log file, and executes certain action informed in the arguments.
 
 Arguments:
   [exec]      the action(s) to be taken upon new entries in logfile,
-              being transferred by piping (eg. send email, notify external 
+              being transferred by piping (eg. send email, notify external
               source, etc). See example. This argument is mandatory.
               The custom values can dynamically added to the action script:
                     __APP__: this script name
                     __LOG__: the log file being monitored (complete path)
-                    __SRC__: the source information being logged in file 
+                    __SRC__: the source information being logged in file
 
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
               If not used, the default used will be "/var/log/syslog" file.
 Options:
-  -i  --ignore      the regular expression (grep) containing the matches to be 
+  -i  --ignore      the regular expression (grep) containing the matches to be
                     ignored by this script. Add here any keywords or patterns
                     you want the script to skip the `--exec` action.
-                    
+
   -h, --help        prints this help information
-  
-  -v, --verbose     more detailed data of what is going on, in case this 
+
+  -s, --silent      runs in silent mode.  This mode forces only the message
+                    entities to be passed along to the action with no extra
+                    formatting.  Use this mode if you want your action to
+                    handle the filtering and formatting.
+
+  -v, --verbose     more detailed data of what is going on, in case this
                     script is not running as daemon
-                    
+
       --version     prints the version of this script
 
 Examples:
@@ -85,7 +91,7 @@ Examples:
                 "mail bruno.braga@gmail.com \\
                      -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'" \\
                 /var/log/syslog
-            
+
 Author: BRAGA, Bruno.
 
 Comments, bugs are welcome at: http://code.google.com/p/linscripts/issues/list
@@ -118,7 +124,7 @@ function version()
 #
 # Purpose:      fix the source name (remove colon in the end)
 #
-# Arguments:    [src]      the source name (data coming from the monitored file)
+# Arguments:    [src] the source name (data coming from the monitored file)
 #
 function fix_source()
 {
@@ -137,7 +143,7 @@ function fix_source()
 #
 # Function: 	printz
 #
-# Purpose: 		improved echo command with date time output 
+# Purpose: 		improved echo command with date time output
 #
 # Arguments: 	[text]		the text to e printed on stdout by echo command
 #
@@ -146,27 +152,27 @@ function printz()
 	# manipulate date for better printing
 	dt=`date +%Y-%m-%d\ %H:%M:%S.%N`
 	dt=${dt:0:23}
-	
+
 	# ignore empty calls
 	if [ -z "$1" ]; then
 		echo
 	else
-		echo -e "$dt  $@"	
+		echo -e "$dt  $@"
 	fi
 }
 
 #
 # Function:     debug
 #
-# Purpose:      similar to printz, but only eecuted if _verbose env 
-#               variable is on. 
+# Purpose:      similar to printz, but only eecuted if _verbose env
+#               variable is on.
 #
 # Arguments:    [text]      the text to e printed on stdout by printz function
 #
 function debug()
 {
     # only print data if verbose option is set.
-    if [ "$_verbose" = "on" ]; then 
+    if [ "$_verbose" = "on" ]; then
         printz $@
     fi
 }
@@ -176,11 +182,11 @@ function debug()
 #
 # Purpose:      sets a global variable _ignore to "on" if any of the values
 #               in source or message from the monitored log file contains
-#               certain expressions (to avoid sending everything by email that 
+#               certain expressions (to avoid sending everything by email that
 #               comes to the log file)
 #
-# Arguments:    [src]      the source name (data coming from the monitored file)
-#               [msg]      the message info 
+# Arguments:    [src]  the source name (data coming from the monitored file)
+#               [msg]  the message info
 #
 function ignore()
 {
@@ -265,7 +271,7 @@ function check_already_running()
     debug "Verifying if another instance of this script (with same \
 configuration is already running..."
 
-    
+
     _lock=/tmp/$_app_name.`echo $_log | sed -e 's/\//_/g'`.lock
 
     if [ -f "$_lock" ]; then
@@ -288,7 +294,7 @@ got stuck from a previous process that did not close as expected."
 #
 # Purpose:  Replaces tags from exec argument for dynamic content handling.
 #
-# Arguments:    [src]      the source name (data coming from the monitored file)
+# Arguments:    [src] the source name (data coming from the monitored file)
 #
 function prepare_exec()
 {
@@ -298,7 +304,7 @@ function prepare_exec()
     src=`echo $src | sed -e 's/\//\\\\\//g'`
     app_name=`echo $_app_name | sed -e 's/\//\\\\\//g'`
     log=`echo $_log | sed -e 's/\//\\\\\//g'`
-    
+
     # substitute string in exec accordingly
     _exec=`echo $_exec | sed -e "s/__APP__/$app_name/g"`
     _exec=`echo $_exec | sed -e "s/__LOG__/$log/g"`
@@ -313,11 +319,11 @@ function prepare_exec()
 function main()
 {
     validate_args
-    
+
     check_already_running
 
     # everything seems ok, starting script
-    
+
     debug "Preparing to monitor [$_log]..."
 
     _mon_name=`basename $_log .log`
@@ -335,17 +341,22 @@ function main()
                 prepare_exec $source
                 debug "Found new alarm. Executing action [$_exec] for source \
 [$source]..."
-                echo -e "New entry in [$_log] log file: \n \
+                if [ $_run_silent = "on" ]; then
+           		   echo -e "$message" | eval $_exec
+                   err=$?
+                else
+                   echo -e "New entry in [$_log] log file: \n \
 \n   Date: [`date -d \"$month $day $year $time\" +\"%Y-%m-%d %H:%M:%S\"`] \
 \n   Host: [$host] \
 \n Source: [$source] \
 \nMessage: [$message]. \
 \n\nAlarm generated by [$0] ($$), running at [$HOSTNAME] by user \
 [`id -nu`]." | eval $_exec
-                err=$?
+                   err=$?
+                fi
                 if [ $err -eq 0 ]; then
                     debug "Successfully executed action [$_exec] for \
-source [$source]." 
+source [$source]."
                 else
                     logger -t "$_mon_name" "Unable to execute action \
 [$_exec] (Error $err)."
@@ -361,7 +372,7 @@ source [$source]."
 # ---------
 
 # fix options order
-args=`getopt -o hvi: -l help,verbose,version,ignore: -- "$@"` || \
+args=`getopt -o hsvi: -l help,silent,verbose,version,ignore: -- "$@"` || \
 ( usage && exit 1 )
 
 eval set -- "$args"
@@ -372,6 +383,9 @@ while [ $# -gt 0 ]; do
 		--help | -h)
 			usage
 			exit 0;;
+                --silent | -s)
+                        _run_silent=on
+                        shift 1;;
 		--ignore | -i)
 			if [ "$2" == "--" ]; then
 				echo "ERROR: Invalid option: [$1]. Try --help for more \
@@ -406,5 +420,3 @@ _log=$2
 
 main
 exit 0
-
-
