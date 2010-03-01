@@ -46,10 +46,11 @@ _ignore_regex=
 _ignore=off
 _log=
 _exec=
+_base_exec=
 
 function usage()
 {
-    cat << EOF
+    echo "
 Usage: logmon [OPTIONS] [exec] [logfile]
 
 Script that keeps constantly (same concept of tail+follow) monitoring
@@ -66,11 +67,11 @@ Arguments:
 
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
-              If not used, the default used will be "/var/log/syslog" file.
+              If not used, the default used will be \"/var/log/syslog\" file.
 Options:
   -i  --ignore      the regular expression (grep) containing the matches to be
                     ignored by this script. Add here any keywords or patterns
-                    you want the script to skip the `--exec` action.
+                    you want the script to skip the [exec] action.
 
   -h, --help        prints this help information
 
@@ -85,11 +86,11 @@ Options:
       --version     prints the version of this script
 
 Examples:
-    # using `mail` for sending alarms by email
-    ./logmon.sh --ignore "^test$|/var/log/syslog|/usr/sbin/cron|^init$" \\
+    # using mail command for sending alarms by email
+    ./logmon.sh --ignore \"^test$|/var/log/syslog|/usr/sbin/cron|^init$\" \\
                 --verbose \\
-                "mail bruno.braga@gmail.com \\
-                     -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'" \\
+                \"mail bruno.braga@gmail.com \\
+                     -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'\" \\
                 /var/log/syslog
 
 Author: BRAGA, Bruno.
@@ -97,7 +98,7 @@ Author: BRAGA, Bruno.
 Comments, bugs are welcome at: http://code.google.com/p/linscripts/issues/list
 or issue them directly to me at: <bruno.braga@gmail.com>. This file is part of
 the project Linscripts. More info at: http://code.google.com/p/linscripts/
-EOF
+"
 }
 
 #
@@ -259,7 +260,7 @@ more details."
     fi
 
     # exec
-    if [ -z "$_exec" ]; then
+    if [ -z "$_base_exec" ]; then
         echo "ERROR: Specify a command/action to be executed. Try --help for \
 more details."
         exit 1
@@ -306,6 +307,7 @@ function prepare_exec()
     log=`echo $_log | sed -e 's/\//\\\\\//g'`
 
     # substitute string in exec accordingly
+    _exec=$_base_exec
     _exec=`echo $_exec | sed -e "s/__APP__/$app_name/g"`
     _exec=`echo $_exec | sed -e "s/__LOG__/$log/g"`
     _exec=`echo $_exec | sed -e "s/__SRC__/$src/g"`
@@ -338,7 +340,7 @@ function main()
             ignore "$source" "$message"
 		    if [ "$_ignore" = "off" ]; then
                 year=`date +%Y`
-                prepare_exec $source
+                prepare_exec "$source"
                 debug "Found new alarm. Executing action [$_exec] for source \
 [$source]..."
                 if [ $_run_silent = "on" ]; then
@@ -383,9 +385,9 @@ while [ $# -gt 0 ]; do
 		--help | -h)
 			usage
 			exit 0;;
-                --silent | -s)
-                        _run_silent=on
-                        shift 1;;
+        --silent | -s)
+                _run_silent=on
+                shift 1;;
 		--ignore | -i)
 			if [ "$2" == "--" ]; then
 				echo "ERROR: Invalid option: [$1]. Try --help for more \
@@ -415,7 +417,7 @@ done
 shift $[ $OPTIND - 1 ]
 
 # set the remaining arguments
-_exec=$1
+_base_exec=$1
 _log=$2
 
 main
