@@ -33,6 +33,9 @@
 # CONFIGURABLE SETTINGS: BEGIN
 # ****************************************************
 
+set -e # exit on error
+set -o pipefail # force error to propagate thru piping
+
 #
 # Define the directory to store the sources of components that require
 # manual compilation or installation. Recommended path is "/usr/local/src/"
@@ -171,27 +174,6 @@ continue."
 	echo
 }
 
-#
-# Function: 	file_sed
-#
-# Purpose: 	replaces content in a file by the use of sed command. 
-#
-# Args:		(1) file to be updated
-#		
-#		(2) the sed expression (eg. 's/a/b/')
-#
-function file_sed()
-{
-	file=$1
-	file_old=$file.old
-	sed_expr=$2
-	echo2 "Updating file [$file]..."
-	cp $file $file_old
-	exec 3<> $file; cat <&3 | sed -e $sed_expr >&3; exec 3>&-
-	echo2 'Done!'
-	echo2 "Note: In case of any problem, you can revert to the original \
-file, located at [$file_old]."
-}
 
 #
 # Function: 	comment_file
@@ -233,7 +215,6 @@ remove evolution-data-server-common
 remove evolution-exchange
 remove evolution-webcal
 remove evolution-indicator
-remove evolution-*
 
 # tracker - used for indexing files (never needed that)
 remove tracker 
@@ -246,12 +227,12 @@ echo2 "Trying to delete Wine folder..."
 rm -rfv ~/.wine/ 2>/dev/null
 echo2 'Done!'
 
-
-# Mono - Microsoft dependencies
-remove mono-*
-
 # Ubuntu One (coming by default on 9.10)
-remove ubuntuone-*
+remove ubuntuone-client
+remove ubuntuone-client-gnome
+
+# empathy (coming by default on 9.10)
+remove empathy
 
 # ****************************************************
 # Install Applications
@@ -261,14 +242,13 @@ echo "Installing preferred applications..."
 
 # Virtual Box - virtualization - better not OSE
 # watch-out: Ubuntu 9.04 repo points to OSE
-install virtualbox 
+#install virtualbox 
 
 # fix issues with max resolution size
 #VBoxManage setextradata global GUI/MaxGuestResolution 1280,800
 
 # Gedit plugins
 install gedit-plugins
-# autocomplete: 
 
 # diff GUI
 install meld 
@@ -314,17 +294,14 @@ install sun-java6-plugin
 install equivs
 
 # FTP GUI
-install filezilla
-install filezilla-common 
+#install filezilla
+#install filezilla-common 
 
 # Project management
-install planner 
+#install planner 
 
 # Web Site utilities - link check
-install klinkstatus
-
-# netbeans - IDE, python, Ruby
-install netbeans
+#install klinkstatus
 
 # web server (apache, php, mysql)
 before=`usec`
@@ -345,20 +322,20 @@ install python-mysqldb
 install gnochm 
 
 # Ruby on Rails
-install ruby
-install rubygems
-gem install rails
+#install ruby
+#install rubygems
+#gem install rails
 
 # Django for Python
 
 # Cairo-Dock (https://help.ubuntu.com/community/CairoDock)
-install cairo-dock
+#install cairo-dock
 
 # video editor
-install kdenlive
+#install kdenlive
 
 # audio editor
-install audacity
+#install audacity
 
 # subtitle editor
 install subtitleeditor
@@ -366,36 +343,18 @@ install subtitleeditor
 # graphic editor (vectorial, SVG)
 install inkscape
 
-# desktop screenshot
-# http://shutter-project.org/downloads/
-echo "Adding [shutter] repository sources..."
-wget -q http://shutter-project.org/shutter-ppa.key -O- |  apt-key add -
-echo '
-# Shutter application sources
-deb http://ppa.launchpad.net/shutter/ppa/ubuntu jaunty main
-deb-src http://ppa.launchpad.net/shutter/ppa/ubuntu jaunty main
-' >> /etc/apt/sources.list
-echo "Updating sources..."
-apt-get update
-install shutter
-
 # gmail check tool
 before=`usec`
 echo2 "Installing [CheckGmail Packages]..."
 install checkgmail
 install libextutils-depends-perl
 install libextutils-pkgconfig-perl # 1. Install Perl ExtUtils dependencies
-install libsexy2 
-libsexyinstall -dev # 2. Install Libsexy, including header file
+install libsexy2 # 2. Install Libsexy, including header file
+install libsexy-dev 
 perl -MCPAN -e 'install Gtk2::Sexy' # 3. Install Gtk2-Sexy, binding for Libsexy
 perl -MCPAN -e 'install Crypt::Simple' # 4. Install Crypt:Simple
 echo2 "Done. This process took [`elapsed $before`] seconds."
 echo
-
-
-# Ubuntu Tweaks
-# http://ubuntu-tweak.com/downloads
-install ubuntu-tweak
 
 # Helper for boot performance
 install bootchart
@@ -403,6 +362,10 @@ install bootchart
 # Helper for appboot performance
 install preload
 
+# instant messaging
+install pidgin
+install pidgin-plugin-pack 
+install pidgin-themes
 
 # ****************************************************
 # Install command-line / bash helper Applications
@@ -425,6 +388,61 @@ install p7zip
 
 # htop - improved top command
 install htop
+
+# ****************************************************
+# Install Manual Repos
+# ****************************************************
+
+# desktop screenshot
+# http://shutter-project.org/downloads/
+echo "Adding [shutter] repository sources..."
+wget -q http://shutter-project.org/shutter-ppa.key -O- |  apt-key add -
+echo '
+# Shutter application sources
+deb http://ppa.launchpad.net/shutter/ppa/ubuntu karmic main
+deb-src http://ppa.launchpad.net/shutter/ppa/ubuntu karmic main
+' >> /etc/apt/sources.list
+echo "Updating sources..."
+apt-get update
+install shutter
+
+# gEdit Developer Plugins screenshot
+# https://launchpad.net/gdp
+echo "Adding [gdp] repository sources..."
+echo '
+# gdp application sources
+deb http://ppa.launchpad.net/sinzui/ppa/ubuntu karmic main 
+deb-src http://ppa.launchpad.net/sinzui/ppa/ubuntu karmic main
+' >> /etc/apt/sources.list
+echo "Updating sources..."
+apt-get update
+install gedit-developer-plugins
+
+# Global Menu
+# http://code.google.com/p/gnome2-globalmenu/
+echo "Adding [Global Menu] repository sources..."
+echo '
+# global-menu application sources
+deb http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main 
+deb-src http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main 
+' >> /etc/apt/sources.list
+echo "Updating sources..."
+apt-get update
+install gnome-globalmenu
+
+# Ubuntu Tweaks
+# http://ubuntu-tweak.com/downloads
+echo "Adding [ubuntu-tweak] repository sources..."
+echo '
+# ubuntu-tweak application sources
+deb http://ppa.launchpad.net/tualatrix/ppa/ubuntu karmic main
+deb-src http://ppa.launchpad.net/tualatrix/ppa/ubuntu karmic main
+' >> /etc/apt/sources.list
+echo "Updating sources..."
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com FE85409EEAB40ECCB65740816AF0E1940624A220
+apt-get update
+install ubuntu-tweak
+
 
 # ****************************************************
 # Firefox Extensions
@@ -480,6 +498,7 @@ before=`usec`
 echo2 "Installing [Skype Packages]..."
 cd /tmp/
 wget http://www.skype.com/go/getskype-linux-beta-ubuntu-64
+apt-get install -f # fix dependencies problems
 dpkg -i skype*.deb
 rm -f skype*.deb
 cd $cur_dir
@@ -502,13 +521,15 @@ echo
 # FFMpeg - recompilation with all codecs
 before=`usec`
 echo2 "Installing [ffmpeg Packages]..."
-install build-dep 
 install ffmpeg
 install winff
-install blame-dev 
 install libxvidcore-dev
+install libmp3lame-dev
 install libfaac-dev
 install libfaad-dev
+install libgsm1-dev
+install libvorbis-dev
+install libdc1394-22-dev
 cd $src_dir
 svn checkout svn://svn.ffmpeg.org/ffmpeg/trunk ffmpeg
 cd ffmpeg
@@ -551,12 +572,12 @@ before=`usec`
 echo2 "Installing [Google App Engine]..."
 install python2.5
 cd $src_dir
-wget http://googleappengine.googlecode.com/files/google_appengine_1.2.7.zip
-unzip google_appengine_1.2.7.zip
+wget http://googleappengine.googlecode.com/files/google_appengine_1.3.1.zip
+unzip google_appengine_1.3.1.zip
 # fix python version
 cd google_appengine
-file_sed dev_appserver.py "s/\#\!\/usr\/bin\/env\ python/\#\!\/usr\/bin\/env\ \
-python2.5/"
+sed -i -e "s/\#\!\/usr\/bin\/env python/\#\!\/usr\/bin\/env python2.5/" \
+dev_appserver.py
 cd $cur_dir
 echo2 "Done. This process took [`elapsed $before`] seconds."
 echo
@@ -568,14 +589,14 @@ echo
 
 # Performace: Grub timeout
 echo2 "Editing grub file... (setting timeout to 2 seconds)"
-file_sed /etc/default/grub 's/GRUB_TIMEOUT\=\"*.[0-9]\"/GRUB_TIMEOUT\=\"2\"/'
+sed -i -e 's/GRUB_TIMEOUT\=\"*.[0-9]\"/GRUB_TIMEOUT\=\"2\"/' /etc/default/grub
 echo2 "Updating grub..."
 update-grub
 
 # Performance: Disable excessive ttys
 echo2 "Disabling excessive TTYs for peformance..."
-file_sed /etc/default/console-setup \ 's/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-6\]\
-\"/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-2\]\"/'
+sed -i -e  's/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-6\]\
+\"/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-2\]\"/' /etc/default/console-setup
 echo2 "Disabling tty3..."
 comment_file /etc/init/tty3.conf
 echo2 "Disabling tty4..."
@@ -592,8 +613,8 @@ echo2 'Done!'
 
 # File system speed (disable access write to files/dirs)
 echo2 "DANGEROUS: This will update the /etc/fstab file..."
-file_sed /etc/fstab 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
-\-ro/g'
+sed -i -e 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
+\-ro/g' /etc/fstab
 
 # turn menu displaying faster
 echo2 "Creating file [~/.gtkrc-2.0] to make menus faster..."
@@ -613,7 +634,7 @@ echo2 'Done!'
 # ****************************************************
 
 # Set crash report to enabled
-file_sed /etc/default/apport 's/enabled\=0/enabled\=1/'
+sed -i -e 's/enabled\=0/enabled\=1/' /etc/default/apport
 
 # Disable confirmation time for logout/shutdown
 gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown \
@@ -626,20 +647,12 @@ export GTK_IM_MODULE=ibus
 export XMODIFIERS=@im=ibus
 export QT_IM_MODULE=ibus' >> ~/.bashrc
 
-# add functionality for progress indicator with cp/mv commands
-echo $'#!/bin/bash 
-# add progress to cp/mv commands 
-alias rscp=\'rsync -aP –no-whole-file –inplace\'
-alias rsmv=\'rscp –remove-source-files\'' >> ~/.bash_aliases
-# just to fix text highlighting\'
 
 # ****************************************************
 # ****************************************************
 
 echo "Cleaning up apt-get..."
-
 apt-get clean
-apt-get autoremove
 
 echo 'Done!'
 exit 0
