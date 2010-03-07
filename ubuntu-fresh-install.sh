@@ -7,7 +7,7 @@
 #
 # Author: 	BRAGA, Bruno <bruno.braga@gmail.com>
 #
-# Copyright: 
+# Copyright:
 #
 #     		Licensed under the Apache License, Version 2.0 (the "License");
 #     		you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 #
 #         	http://www.apache.org/licenses/LICENSE-2.0
 #
-#     		Unless required by applicable law or agreed to in writing, 
-#     		software distributed under the License is distributed on an 
-#     		"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,  
-#		either express or implied. See the License for the specific  
-#		language governing permissions and limitations under the 
+#     		Unless required by applicable law or agreed to in writing,
+#     		software distributed under the License is distributed on an
+#     		"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+#		either express or implied. See the License for the specific
+#		language governing permissions and limitations under the
 #		License.
 #
 # Notes:	This file is part of the project Linscripts. More info at:
@@ -45,15 +45,15 @@ src_dir=/usr/local/src/
 # ****************************************************
 # CONFIGURABLE SETTINGS: END
 # ****************************************************
- 
+
 # ****************************************************
 # Initiate
 # ****************************************************
 
-# Make sure you have proper privileges 
+# Make sure you have proper privileges
 if [ $USER != root ]; then
 	echo 'You need to be root for this action.'
-	echo	
+	echo
 	echo 'Try executing "sudo install.sh" command instead.'
 	exit 1
 fi
@@ -66,7 +66,7 @@ fi
 #
 # Function: 	usec
 #
-# Purpose: 	gets the unix date 
+# Purpose: 	gets the unix date
 #		(date in seconds since 1970/01/01 00:00:00)
 #
 function usec()
@@ -77,8 +77,8 @@ function usec()
 #
 # Function: 	elapsed
 #
-# Purpose: 	gets time elapsed, in seconds, from a start point 
-#		(being unix time see also `usec` function) and now. 
+# Purpose: 	gets time elapsed, in seconds, from a start point
+#		(being unix time see also `usec` function) and now.
 #
 function elapsed()
 {
@@ -87,20 +87,20 @@ function elapsed()
 		echo2 "Function elapsed() requires previous unix date as \
 argument to continue."
 		echo2 "Exiting this script with error..."
-		exit 1	
+		exit 1
 	fi
 
 	before=$1
 	after=`usec`
 	elapsed_seconds="$(expr $after - $before)"
-	echo $elapsed_seconds	
+	echo $elapsed_seconds
 }
 
 #
 # Function: 	echo2
 #
 # Purpose: 	better screen logging with date time added in the
-#		beginning of every `echo` command. 
+#		beginning of every `echo` command.
 #
 function echo2()
 {
@@ -113,15 +113,16 @@ function echo2()
 # Purpose: 	simple `apt-get install` command call with properly
 #		defined arguments:
 #
-#		-y 			automatically attibute "Yes" to 
+#		-y 			automatically attibute "Yes" to
 #					confirmation questions
 #
-#		-f 			fix broken dependencies, if any 
+#		-f 			fix broken dependencies, if any
 #
 #		--force-yes		dangerous, but necessary to diminuish
-#					prompting interruptions.
-#			
-#		--install-recommends	automat[ ! -d ~/.icons ] && mkdir #					and recommended packages altogether.
+#					    prompting interruptions.
+#
+#		--install-recommends	automat[ ! -d ~/.icons ] && mkdir
+#					            and recommended packages altogether.
 #
 function install()
 {
@@ -130,7 +131,7 @@ function install()
 		echo2 "Function install() requires package name as argument to \
 continue."
 		echo2 "Exiting this script with error..."
-		exit 1	
+		exit 1
 	fi
 
 	before=`usec`
@@ -145,10 +146,10 @@ took [`elapsed $before`] seconds."
 #
 # Function: 	remove
 #
-# Purpose: 	simple `apt-get remove` (and autoremove) command call 
-# 		with properly defined arguments:
+# Purpose: 	simple `apt-get remove` (and autoremove) command call
+# 		    with properly defined arguments:
 #
-#			-y 	automatically attibute "Yes" to 
+#			-y 	automatically attibute "Yes" to
 #				confirmation questions
 #
 function remove()
@@ -158,14 +159,14 @@ function remove()
 		echo2 "Function remove() requires package name as argument to \
 continue."
 		echo2 "Exiting this script with error..."
-		exit 1	
+		exit 1
 	fi
 
 	before=`usec`
 	package_name=$1
 	echo2 "Starting to remove package [$package_name]..."
 	apt-get remove -y $package_name
-	
+
 	# system cleanup
 	apt-get autoremove -y
 
@@ -176,12 +177,12 @@ continue."
 
 
 #
-# Function: 	comment_file
+# Function: comment_file
 #
 # Purpose: 	Places a # in every line of the file (useful for bash scritps)
 #
 # Args:		(1) file to be updated
-#		
+#
 function comment_file()
 {
 	file=$1
@@ -217,8 +218,8 @@ remove evolution-webcal
 remove evolution-indicator
 
 # tracker - used for indexing files (never needed that)
-remove tracker 
-remove tracker-search-tool 
+remove tracker
+remove tracker-search-tool
 remove tracker-utils
 
 # just to be sure Wine is not installed
@@ -242,7 +243,7 @@ echo "Installing preferred applications..."
 
 # Virtual Box - virtualization - better not OSE
 # watch-out: Ubuntu 9.04 repo points to OSE
-#install virtualbox 
+#install virtualbox
 
 # fix issues with max resolution size
 #VBoxManage setextradata global GUI/MaxGuestResolution 1280,800
@@ -251,13 +252,13 @@ echo "Installing preferred applications..."
 install gedit-plugins
 
 # diff GUI
-install meld 
+install meld
 
 # sync GUI
-install grsync 
+install grsync
 
 # thumbnail generator
-install phatch 
+install phatch
 
 # nautilus - customizing right click
 install nautilus-actions
@@ -275,30 +276,30 @@ install git-core
 install git-email
 
 # compilers
-install build-essential 
+install build-essential
 install checkinstall
-install cdbs 
-install devscripts 
-install dh-make 
-install fakeroot 
-install libxml-parser-perl 
-install check 
+install cdbs
+install devscripts
+install dh-make
+install fakeroot
+install libxml-parser-perl
+install check
 install avahi-daemon
 
 # Python stuff
 install python2.6-dev
 
 # Java stuff
-install sun-java6-jre 
-install sun-java6-plugin 
+install sun-java6-jre
+install sun-java6-plugin
 install equivs
 
 # FTP GUI
 #install filezilla
-#install filezilla-common 
+#install filezilla-common
 
 # Project management
-#install planner 
+#install planner
 
 # Web Site utilities - link check
 #install klinkstatus
@@ -319,7 +320,7 @@ install mysql-gui-tools-common
 install python-mysqldb
 
 # CHM (Microsoft Helper) viewer
-install gnochm 
+install gnochm
 
 # Ruby on Rails
 #install ruby
@@ -350,7 +351,7 @@ install checkgmail
 install libextutils-depends-perl
 install libextutils-pkgconfig-perl # 1. Install Perl ExtUtils dependencies
 install libsexy2 # 2. Install Libsexy, including header file
-install libsexy-dev 
+install libsexy-dev
 perl -MCPAN -e 'install Gtk2::Sexy' # 3. Install Gtk2-Sexy, binding for Libsexy
 perl -MCPAN -e 'install Crypt::Simple' # 4. Install Crypt:Simple
 echo2 "Done. This process took [`elapsed $before`] seconds."
@@ -364,15 +365,20 @@ install preload
 
 # instant messaging
 install pidgin
-install pidgin-plugin-pack 
+install pidgin-plugin-pack
 install pidgin-themes
+
+# video codecs
+install gstreamer0.10-ffmpeg
+install gstreamer0.10-fluendo-mp3
+install gstreamer0.10-plugins-ugly
 
 # ****************************************************
 # Install command-line / bash helper Applications
 # ****************************************************
 
 # curl - similar to wget
-install curl 
+install curl
 
 # tree - list directory info
 install tree
@@ -411,7 +417,7 @@ install shutter
 echo "Adding [gdp] repository sources..."
 echo '
 # gdp application sources
-deb http://ppa.launchpad.net/sinzui/ppa/ubuntu karmic main 
+deb http://ppa.launchpad.net/sinzui/ppa/ubuntu karmic main
 deb-src http://ppa.launchpad.net/sinzui/ppa/ubuntu karmic main
 ' >> /etc/apt/sources.list
 echo "Updating sources..."
@@ -423,8 +429,8 @@ install gedit-developer-plugins
 echo "Adding [Global Menu] repository sources..."
 echo '
 # global-menu application sources
-deb http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main 
-deb-src http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main 
+deb http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main
+deb-src http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu karmic main
 ' >> /etc/apt/sources.list
 echo "Updating sources..."
 apt-get update
@@ -471,11 +477,15 @@ addon-201-latest.xpi
 # Delicious Bookmarks
 firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442
 
+# Compact Menu 2 (Linux)
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/4550/\
+platform:2/addon-4550-latest.xpi
+
 # ****************************************************
 # Manual Installation
 # ****************************************************
 
-# Mac4Lin (turn ubuntu into a Mac style desktop) 
+# Mac4Lin (turn ubuntu into a Mac style desktop)
 #not working properly for Ubuntu 9.10
 #before=`usec`
 #echo2 "Installing [Mac4Lin Packages]..."
@@ -485,7 +495,7 @@ firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442
 #tar -zxvf Mac4Lin_v1.0.tar.gz
 #cd Mac4Lin_v1.0
 #[ ! -d ~/.icons ] && mkdir ~/.icons
-#[ ! -d ~/.themes ] && mkdir ~/.themes 
+#[ ! -d ~/.themes ] && mkdir ~/.themes
 #bash Mac4Lin_Install_v1.0.sh
 #cd $cur_dir
 #echo2 "Done. This process took [`elapsed $before`] seconds."
@@ -643,7 +653,7 @@ gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown \
 # Fix iBus issues (maybe will need to manually add to startup)
 echo '
 # fix iBus issues on start
-export GTK_IM_MODULE=ibus 
+export GTK_IM_MODULE=ibus
 export XMODIFIERS=@im=ibus
 export QT_IM_MODULE=ibus' >> ~/.bashrc
 

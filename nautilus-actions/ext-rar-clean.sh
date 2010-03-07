@@ -16,16 +16,16 @@
 # Copyright:
 #
 #               Licensed under the Apache License, Version 2.0 (the "License");
-#               you may not use this file except in compliance with the 
+#               you may not use this file except in compliance with the
 #               License. You may obtain a copy of the License at
 #
 #                       http://www.apache.org/licenses/LICENSE-2.0
 #
-#               Unless required by applicable law or agreed to in writing, 
-#               software distributed under the License is distributed on an 
-#               "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
-#               either express or implied. See the License for the specific 
-#               language governing permissions and limitations under the 
+#               Unless required by applicable law or agreed to in writing,
+#               software distributed under the License is distributed on an
+#               "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+#               either express or implied. See the License for the specific
+#               language governing permissions and limitations under the
 #               License.
 #
 # Notes:        This file is part of the project Linscripts. More info at:
@@ -46,6 +46,9 @@ _version=0.01
 # For Ubuntu 9.10, location of the trash can
 _trash=~/.local/share/Trash/files/
 
+# make sure the Trash already exists
+mkdir -p $_trash
+
 # current directory
 args=$1
 
@@ -53,15 +56,15 @@ function cleanup()
 {
     echo "Cleaning up rar files..."
 
-    f=$1    
+    f=$1
 
-    # in case it is a partitioned rar     
+    # in case it is a partitioned rar
     for f2 in `rar l -v $f | grep Volume | sed -e "s/Volume //g"`; do
         mv -vf $f2 $_trash
     done
 
     # if it is a single rar archive
-    mv -vf $f $f2 $_trash 2>/dev/null 
+    mv -vf $f $_trash 2>/dev/null
 
     echo "Done."
 }
@@ -78,9 +81,8 @@ function extract()
             # it is just a file
             # extract it
             echo "Extracting [$arg] compressed file..."
-            rar e -y $arg
-
-            cleanup $arg
+            rar e -y $arg && cleanup $arg || echo "Failed to extract. Most
+probably the file is incomplete. Just skipping..."
         else
             echo "File [$arg] is not RAR type. Skipping..."
         fi
@@ -89,7 +91,8 @@ function extract()
     fi
 }
 
-echo "Starting to extract all RAR files in [$dirs] directory(ies)..."
+echo "Starting to extract all RAR files in [$args] directory(ies) and/or \
+file(s)..."
 
 
 for arg in $args; do
@@ -115,5 +118,5 @@ for arg in $args; do
 
 done
 
-read  -p "Finished..."
+read  -p "Finished! You may close this window... (press any key)"
 #EOF
