@@ -32,7 +32,7 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.13
+_version=0.14
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
@@ -64,6 +64,7 @@ Arguments:
                     __APP__: this script name
                     __LOG__: the log file being monitored (complete path)
                     __SRC__: the source information being logged in file
+                    __SRV__: the hostname where file is located
 
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
@@ -90,7 +91,7 @@ Examples:
     ./logmon.sh --ignore \"^test$|/var/log/syslog|/usr/sbin/cron|^init$\" \\
                 --verbose \\
                 \"mail bruno.braga@gmail.com \\
-                     -s '__APP__ Alarm [$HOSTNAME]: __LOG__ __SRC__'\" \\
+                     -s '__APP__ Alarm [__SRV__]: __LOG__ __SRC__'\" \\
                 /var/log/syslog
 
 Author: BRAGA, Bruno.
@@ -311,6 +312,7 @@ function prepare_exec()
     _exec=`echo $_exec | sed -e "s/__APP__/$app_name/g"`
     _exec=`echo $_exec | sed -e "s/__LOG__/$log/g"`
     _exec=`echo $_exec | sed -e "s/__SRC__/$src/g"`
+    _exec=`echo $_exec | sed -e "s/__SRV__/$HOSTNAME/g"`
 }
 
 #

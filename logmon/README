@@ -55,6 +55,7 @@ Usage:
                         __APP__: this script name
                         __LOG__: the log file being monitored (complete path)
                         __SRC__: the source information being logged in file
+                        __SRV__: the hostname where file is located
 
       [logfile] the log file to be monitored. It should be a syslog
                 formatted file, or this script may not work properly.
