@@ -248,6 +248,13 @@ echo "Installing preferred applications..."
 # fix issues with max resolution size
 #VBoxManage setextradata global GUI/MaxGuestResolution 1280,800
 
+# Japanese and chinese IME support
+install ibus
+install ibus-table
+install ibus-gtk
+install ibus-pinyin
+install ibus-anthy
+
 # Gedit plugins
 install gedit-plugins
 
