@@ -29,12 +29,12 @@
 #		http://code.google.com/p/linscripts/issues/list
 #
 
+set -e # exit on error
+set -o pipefail # force error to propagate thru piping
+
 # ****************************************************
 # CONFIGURABLE SETTINGS: BEGIN
 # ****************************************************
-
-set -e # exit on error
-set -o pipefail # force error to propagate thru piping
 
 #
 # Define the directory to store the sources of components that require
@@ -44,10 +44,6 @@ src_dir=/usr/local/src/
 
 # ****************************************************
 # CONFIGURABLE SETTINGS: END
-# ****************************************************
-
-# ****************************************************
-# Initiate
 # ****************************************************
 
 # Make sure you have proper privileges
@@ -63,136 +59,20 @@ fi
 # Helper Functions
 # ****************************************************
 
-#
-# Function: 	usec
-#
-# Purpose: 	gets the unix date
-#		(date in seconds since 1970/01/01 00:00:00)
-#
-function usec()
-{
-	echo `date +%s`
-}
-
-#
-# Function: 	elapsed
-#
-# Purpose: 	gets time elapsed, in seconds, from a start point
-#		(being unix time see also `usec` function) and now.
-#
-function elapsed()
-{
-	# make sure this function is called with arguments
-	if [ -z $1 ]; then
-		echo2 "Function elapsed() requires previous unix date as \
-argument to continue."
-		echo2 "Exiting this script with error..."
-		exit 1
-	fi
-
-	before=$1
-	after=`usec`
-	elapsed_seconds="$(expr $after - $before)"
-	echo $elapsed_seconds
-}
-
-#
-# Function: 	echo2
-#
-# Purpose: 	better screen logging with date time added in the
-#		beginning of every `echo` command.
-#
-function echo2()
-{
-	echo "`date +"%Y-%m-%d %H:%M:%S"` $1"
-}
-
-#
-# Function: 	install
-#
-# Purpose: 	simple `apt-get install` command call with properly
-#		defined arguments:
-#
-#		-y 			automatically attibute "Yes" to
-#					confirmation questions
-#
-#		-f 			fix broken dependencies, if any
-#
-#		--force-yes		dangerous, but necessary to diminuish
-#					    prompting interruptions.
-#
-#		--install-recommends	automat[ ! -d ~/.icons ] && mkdir
-#					            and recommended packages altogether.
-#
 function install()
 {
-	# make sure this function is called with arguments
-	if [ -z $1 ]; then
-		echo2 "Function install() requires package name as argument to \
-continue."
-		echo2 "Exiting this script with error..."
-		exit 1
-	fi
-
-	before=`usec`
-	package_name=$1
-	echo2 "Starting to install package [$package_name]..."
-	apt-get install -y --force-yes -f --install-recommends $package_name
-	echo2 "Successfully installed package [$package_name]. This process \
-took [`elapsed $before`] seconds."
-	echo
+    packages=$@
+    for package in $packages; do
+        apt-get install -y --force-yes -f --install-recommends $package
+    done
 }
 
-#
-# Function: 	remove
-#
-# Purpose: 	simple `apt-get remove` (and autoremove) command call
-# 		    with properly defined arguments:
-#
-#			-y 	automatically attibute "Yes" to
-#				confirmation questions
-#
 function remove()
 {
-	# make sure this function is called with arguments
-	if [ -z $1 ]; then
-		echo2 "Function remove() requires package name as argument to \
-continue."
-		echo2 "Exiting this script with error..."
-		exit 1
-	fi
-
-	before=`usec`
-	package_name=$1
-	echo2 "Starting to remove package [$package_name]..."
-	apt-get remove -y $package_name
-
-	# system cleanup
-	apt-get autoremove -y
-
-	echo2 "Successfully removed package [$package_name]. This process took \
-[`elapsed $before`] seconds."
-	echo
-}
-
-
-#
-# Function: comment_file
-#
-# Purpose: 	Places a # in every line of the file (useful for bash scritps)
-#
-# Args:		(1) file to be updated
-#
-function comment_file()
-{
-	file=$1
-	file_old=$file.old
-	echo2 "Commenting file [$file]..."
-	cp $file $file_old
-	exec 3<> $file; cat <&3 | awk '{ print "#"$0 }' >&3; exec 3>&-
-	echo2 'Done!'
-	echo2 "Note: In case of any problem, you can revert to the original \
-file, located at [$file_old]."
+    packages=$@
+    for package in $packages; do
+    	apt-get remove -y $package
+    done
 }
 
 # Inititate from updating repository
@@ -209,31 +89,22 @@ cur_dir=`pwd`
 echo2 "Cleaning up unused stuff..."
 
 # Evolution - Email Client
-remove evolution
-remove evolution-common
-remove evolution-data-server
-remove evolution-data-server-common
-remove evolution-exchange
-remove evolution-webcal
-remove evolution-indicator
+remove "evolution evolution-common evolution-data-server
+        evolution-data-server-common evolution-exchange evolution-webcal
+        evolution-indicator"
 
 # tracker - used for indexing files (never needed that)
-remove tracker
-remove tracker-search-tool
-remove tracker-utils
+remove "tracker remove tracker-search-tool remove tracker-utils"
 
 # just to be sure Wine is not installed
 remove wine
-echo2 "Trying to delete Wine folder..."
 rm -rfv ~/.wine/ 2>/dev/null
-echo2 'Done!'
 
 # Ubuntu One (coming by default on 9.10)
-remove ubuntuone-client
-remove ubuntuone-client-gnome
+remove "ubuntuone-client ubuntuone-client-gnome"
 
 # empathy (coming by default on 9.10)
-remove empathy
+remove "empathy"
 
 # ****************************************************
 # Install Applications
@@ -241,166 +112,84 @@ remove empathy
 
 echo "Installing preferred applications..."
 
-# Virtual Box - virtualization - better not OSE
-# watch-out: Ubuntu 9.04 repo points to OSE
-#install virtualbox
-
 # fix issues with max resolution size
 #VBoxManage setextradata global GUI/MaxGuestResolution 1280,800
 
 # Japanese and chinese IME support
-install ibus
-install ibus-table
-install ibus-gtk
-install ibus-pinyin
-install ibus-anthy
+install "ibus ibus-table ibus-gtk ibus-pinyin ibus-anthy"
 
-# Gedit plugins
-install gedit-plugins
+# utilities
+install "nautilus-actions compizconfig-settings-manager phatch grsync gnochm
+         subtitleeditor pidgin pidgin-plugin-pack pidgin-themes checkgmail
+         ubuntu-tweak nautilus-gksu nautilus-image-converter
+         nautilus-open-terminal nautilus-script-audio-convert
+         nautilus-script-collection-svn nautilus-script-manager
+         nautilus-sendto nautilus-share nautilus-wallpaper
+         pidgin-data pidgin-guifications msn-pecan pidgin-musictracker
+         skype"
 
-# diff GUI
-install meld
-
-# sync GUI
-install grsync
-
-# thumbnail generator
-install phatch
-
-# nautilus - customizing right click
-install nautilus-actions
-
-# vim GUI (for rendering HTML highlight code)
-install vim-gnome
-
-# compiz GUI (for visual effects editing)
-install compizconfig-settings-manager
+# graphics
+install "inkscape gimp gimp-data gimp-plugin-registry"
 
 # source control
-install subversion
-install git
-install git-core
-install git-email
+install "subversion git git-core git-email"
+
+# programming related
+install "meld gedit-plugins vim-gnome mysql-gui-tools-common"
 
 # compilers
-install build-essential
-install checkinstall
-install cdbs
-install devscripts
-install dh-make
-install fakeroot
-install libxml-parser-perl
-install check
-install avahi-daemon
+install "build-essential checkinstall cdbs devscripts dh-make fakeroot
+         libxml-parser-perl check avahi-daemon"
 
-# Python stuff
-install python2.6-dev
+# libraries
+install "ruby rubygems python2.6-dev python-mysqldb sun-java6-jre
+         sun-java6-plugin equivs sun-java6-fonts"
 
-# Java stuff
-install sun-java6-jre
-install sun-java6-plugin
-install equivs
+# audio/video
+install "ffmpeg winff libxvidcore-dev libmp3lame-dev libfaac-dev libfaad-dev
+         libgsm1-dev libvorbis-dev libdc1394-22-dev gstreamer0.10-ffmpeg
+         gstreamer0.10-fluendo-mp3 gstreamer0.10-plugins-ugly
+         non-free-codecs libxine1-ffmpeg gxine mencoder mpeg2dec vorbis-tools
+         id3v2 mpg321 mpg123 libflac++6 ffmpeg toolame libmp4v2-0
+         totem-mozilla icedax tagtool easytag id3tool lame
+         mozilla-helix-player helix-player libmad0 libjpeg-progs libmpcdec3
+         libquicktime1 flac faac faad sox toolame ffmpeg2theora libmpeg2-4
+         uudeview flac libmpeg3-1 mpeg3-utils mpegdemux liba52-dev
+         gstreamer0.10-fluendo-mpegdemux gstreamer0.10-gnonlin
+         gstreamer0.10-pitfdll gstreamer0.10-sdl
+         gstreamer0.10-plugins-bad-multiverse gstreamer0.10-schroedinger
+         gstreamer0.10-plugins-ugly-multiverse totem-gstreamer
+         gstreamer-dbus-media-service gstreamer-tools ubuntu-restricted-extras
+         libdvdcss2"
 
-# FTP GUI
-#install filezilla
-#install filezilla-common
+# fonts
+mkdir -p /usr/lib/X11/fonts/Type1
+install "msttcorefonts ttf-larabie-straight ttf-larabie-deco
+         mplayer-fonts xfonts-terminus-dos xfonts-terminus
+         xfonts-terminus-oblique xfonts-mona tv-fonts ttf-tuffy ttf-sjfonts
+         ttf-sil-padauk ttf-sil-ezra ttf-paktype ttf-georgewilliams
+         ttf-fifthhorseman-dkg-handwriting ttf-farsiweb ttf-essays1743
+         ttf-opensymbol ttf-nafees ttf-mgopen ttf-gentium ttf-freefont
+         ttf-dustin ttf-devanagari-fonts ttf-dejavu-extra ttf-dejavu-core
+         ttf-dejavu ttf-bpg-georgian-fonts ttf-bitstream-vera ttf-alee"
 
-# Project management
-#install planner
+gem install rails
 
-# Web Site utilities - link check
-#install klinkstatus
+# helpers
+install "bootchart preload curl tree rar xclip p7zip htop nmap traceroute
+         unace unrar zip unzip p7zip-full p7zip-rar sharutils aish uudeview
+         mpack lha arj cabextract file-roller gparted ntfsprogs"
+
+# browsers
+install "firefox opera "
 
 # web server (apache, php, mysql)
-before=`usec`
-echo2 "Installing [LAMP]..."
+echo "Installing [LAMP]..."
 tasksel install lamp-server # all-in-one install
-echo2 "Restarting Apache Server..."
+echo "Restarting Apache Server..."
 /etc/init.d/apache2 restart # make valid the changes in web server
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
-# MySQL tools
-install mysql-gui-tools-common
 
-# MySQL for Python
-install python-mysqldb
-
-# CHM (Microsoft Helper) viewer
-install gnochm
-
-# Ruby on Rails
-#install ruby
-#install rubygems
-#gem install rails
-
-# Django for Python
-
-# Cairo-Dock (https://help.ubuntu.com/community/CairoDock)
-#install cairo-dock
-
-# video editor
-#install kdenlive
-
-# audio editor
-#install audacity
-
-# subtitle editor
-install subtitleeditor
-
-# graphic editor (vectorial, SVG)
-install inkscape
-
-# gmail check tool
-before=`usec`
-echo2 "Installing [CheckGmail Packages]..."
-install checkgmail
-install libextutils-depends-perl
-install libextutils-pkgconfig-perl # 1. Install Perl ExtUtils dependencies
-install libsexy2 # 2. Install Libsexy, including header file
-install libsexy-dev
-perl -MCPAN -e 'install Gtk2::Sexy' # 3. Install Gtk2-Sexy, binding for Libsexy
-perl -MCPAN -e 'install Crypt::Simple' # 4. Install Crypt:Simple
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
-
-# Helper for boot performance
-install bootchart
-
-# Helper for appboot performance
-install preload
-
-# instant messaging
-install pidgin
-install pidgin-plugin-pack
-install pidgin-themes
-
-# video codecs
-install gstreamer0.10-ffmpeg
-install gstreamer0.10-fluendo-mp3
-install gstreamer0.10-plugins-ugly
-
-# ****************************************************
-# Install command-line / bash helper Applications
-# ****************************************************
-
-# curl - similar to wget
-install curl
-
-# tree - list directory info
-install tree
-
-# rar - zipping files
-install rar
-
-# copy content to clipboard (from pipes)
-install xclip
-
-# 7zip - zipping files
-install p7zip
-
-# htop - improved top command
-install htop
 
 # ****************************************************
 # Install Manual Repos
@@ -492,39 +281,20 @@ platform:2/addon-4550-latest.xpi
 # Manual Installation
 # ****************************************************
 
-# Mac4Lin (turn ubuntu into a Mac style desktop)
-#not working properly for Ubuntu 9.10
-#before=`usec`
-#echo2 "Installing [Mac4Lin Packages]..."
-#cd /tmp/
-#wget http://sourceforge.net/projects/mac4lin/files/mac4lin/ver.1.0/\
-#Mac4Lin_v1.0.tar.gz/download
-#tar -zxvf Mac4Lin_v1.0.tar.gz
-#cd Mac4Lin_v1.0
-#[ ! -d ~/.icons ] && mkdir ~/.icons
-#[ ! -d ~/.themes ] && mkdir ~/.themes
-#bash Mac4Lin_Install_v1.0.sh
-#cd $cur_dir
-#echo2 "Done. This process took [`elapsed $before`] seconds."
-#echo
 
 
 # Skype (as of 2009/11/01 there is no skype on Karmic repositories)
 # install skype
-before=`usec`
-echo2 "Installing [Skype Packages]..."
+echo "Installing [Skype Packages]..."
 cd /tmp/
 wget http://www.skype.com/go/getskype-linux-beta-ubuntu-64
 apt-get install -f # fix dependencies problems
 dpkg -i skype*.deb
 rm -f skype*.deb
 cd $cur_dir
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
 # x264 encoder for FFMpeg
-before=`usec`
-echo2 "Installing [x264 Packages]..."
+echo "Installing [x264 Packages]..."
 cd $src_dir
 git clone git://git.videolan.org/x264.git x264
 cd x264/
@@ -532,21 +302,8 @@ cd x264/
 make
 make install
 cd $cur_dir
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
 # FFMpeg - recompilation with all codecs
-before=`usec`
-echo2 "Installing [ffmpeg Packages]..."
-install ffmpeg
-install winff
-install libxvidcore-dev
-install libmp3lame-dev
-install libfaac-dev
-install libfaad-dev
-install libgsm1-dev
-install libvorbis-dev
-install libdc1394-22-dev
 cd $src_dir
 svn checkout svn://svn.ffmpeg.org/ffmpeg/trunk ffmpeg
 cd ffmpeg
@@ -557,8 +314,6 @@ cd ffmpeg
 make
 make install
 cd $cur_dir
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
 # flash support
 #
@@ -573,20 +328,15 @@ echo
 # rm -f /usr/lib/firefox-addons/plugins/*flash*
 # rm -rfd /usr/lib/nspluginwrapper
 #
-before=`usec`
-echo2 "Installing [Flash plugin for mozilla]..."
+echo "Installing [Flash plugin for mozilla]..."
 cd /tmp/
 wget http://download.macromedia.com/pub/labs/flashplayer10/\
 libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 tar -zxvf libflashplayer-10.0.32.18.linux-x86_64.so.tar.gz
 cp libflashplayer.so /usr/lib/mozilla/plugins/
 cd $cur_dir
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
 
-before=`usec`
-echo2 "Installing [Google App Engine]..."
 install python2.5
 cd $src_dir
 wget http://googleappengine.googlecode.com/files/google_appengine_1.3.1.zip
@@ -596,8 +346,6 @@ cd google_appengine
 sed -i -e "s/\#\!\/usr\/bin\/env python/\#\!\/usr\/bin\/env python2.5/" \
 dev_appserver.py
 cd $cur_dir
-echo2 "Done. This process took [`elapsed $before`] seconds."
-echo
 
 
 # ****************************************************
@@ -605,46 +353,36 @@ echo
 # ****************************************************
 
 # Performace: Grub timeout
-echo2 "Editing grub file... (setting timeout to 2 seconds)"
+echo "Editing grub file... (setting timeout to 2 seconds)"
 sed -i -e 's/GRUB_TIMEOUT\=\"*.[0-9]\"/GRUB_TIMEOUT\=\"2\"/' /etc/default/grub
-echo2 "Updating grub..."
+echo "Updating grub..."
 update-grub
 
 # Performance: Disable excessive ttys
-echo2 "Disabling excessive TTYs for peformance..."
+echo "Disabling excessive TTYs for peformance..."
 sed -i -e  's/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-6\]\
 \"/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-2\]\"/' /etc/default/console-setup
-echo2 "Disabling tty3..."
-comment_file /etc/init/tty3.conf
-echo2 "Disabling tty4..."
-comment_file /etc/init/tty4.conf
-echo2 "Disabling tty5..."
-comment_file /etc/init/tty5.conf
-echo2 "Disabling tty6..."
-comment_file /etc/init/tty6.conf
+
 
 # Performance: Decrease Swappiness for better RAM memory usage
-echo2 "Decresing swap for memory opmization (updating /etc/sysctl.conf file)..."
+echo "Decresing swap for memory opmization (updating /etc/sysctl.conf file)..."
 echo "vm.swappiness=10" >> /etc/sysctl.conf
-echo2 'Done!'
 
 # File system speed (disable access write to files/dirs)
-echo2 "DANGEROUS: This will update the /etc/fstab file..."
+echo "DANGEROUS: This will update the /etc/fstab file..."
 sed -i -e 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
 \-ro/g' /etc/fstab
 
 # turn menu displaying faster
-echo2 "Creating file [~/.gtkrc-2.0] to make menus faster..."
+echo "Creating file [~/.gtkrc-2.0] to make menus faster..."
 echo "gtk-menu-popup-delay=0" >> ~/.gtkrc-2.0
-echo2 'Done!'
 
 # impove network
-echo2 "Updating settings for network connection..."
+echo "Updating settings for network connection..."
 echo "net.ipv4.tcp_timestamps = 0" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_sack = 1" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_no_metrics_save = 1" >> /etc/sysctl.conf
 echo "net.core.netdev_max_backlog = 2500" >> /etc/sysctl.conf
-echo2 'Done!'
 
 # ****************************************************
 # Other stuff
