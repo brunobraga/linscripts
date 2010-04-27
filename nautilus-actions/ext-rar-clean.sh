@@ -197,8 +197,9 @@ function extract()
             # it is just a file
             # extract it
             echo "Extracting [$arg] compressed file..."
-            rar e -y $arg && cleanup $arg || echo "Failed to extract. Most \
-probably the file is incomplete. Just skipping..."
+            rar e -y $arg && notify $arg info && cleanup $arg || \
+            	echo "Failed to extract. Most probably the file is incomplete.\
+ Just skipping..."
         else
             echo "File [$arg] is not RAR type. Skipping..."
         fi
@@ -278,6 +279,26 @@ function parse_args()
     fi
 }
 
+#
+# Function: 	notify
+#
+# Purpose: 		uses the notify-send command, if available, to inform the
+#				result state of the execution visually.
+#
+# Arguments:	@file: the extracted file(s).
+#
+#				@state: the result of the action.
+#						valid values are: info, warning, error
+#
+function notify()
+{
+	f=`basename $1 .rar`
+	state=$2
+
+	if [ "`which notify-send | wc -l`" != "0" ]; then
+		notify-send -i gtk-dialog-$state "`basename $0`" "Finished extracting [$f]."
+	fi
+}
 
 #
 # Function: 	main
