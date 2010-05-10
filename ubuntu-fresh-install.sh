@@ -342,6 +342,10 @@ gconftool -s /apps/indicator-session/suppress_logout_restart_shutdown \
 gconftool -s -t bool /apps/gnome-power-manager/lock/hibernate false
 gconftool -s -t bool /apps/gnome-power-manager/lock/suspend false
 
+# Leave the location bar instead of buttons on Nautilus
+gconftool-2 --set /apps/nautilus/preferences/always_use_location_entry \
+--type=bool true
+
 # Fix iBus issues (maybe will need to manually add to startup)
 echo '
 # fix iBus issues on start
