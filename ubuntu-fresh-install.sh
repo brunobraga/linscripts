@@ -196,6 +196,10 @@ firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442
 firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/4550/\
 platform:2/addon-4550-latest.xpi
 
+# YSlow
+https://addons.mozilla.org/en-US/firefox/downloads/latest/5369/\
+addon-5369-latest.xpi
+
 # ****************************************************
 # Manual Installation
 # ****************************************************
