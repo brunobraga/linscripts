@@ -90,6 +90,13 @@ deb http://deb.opera.com/opera stable non-free
 
 " >> /etc/apt/sources.list
 
+# Requesting keys for above repo sources
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com FC6D7D9D009ED615
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com F9A2F76A9D1A0061
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com AC23FF68045F08BC
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 7889D725DA6DEEAA
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 6AF0E1940624A220
+
 echo "Updating sources..."
 # Inititate from updating repository
 apt-get update -y
