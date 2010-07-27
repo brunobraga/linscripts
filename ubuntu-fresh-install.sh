@@ -147,7 +147,7 @@ tv-fonts ttf-tuffy ttf-sjfonts ttf-sil-padauk ttf-sil-ezra ttf-paktype
 ttf-georgewilliams ttf-fifthhorseman-dkg-handwriting ttf-farsiweb
 ttf-essays1743 ttf-opensymbol ttf-nafees ttf-mgopen ttf-freefont ttf-dustin
 ttf-devanagari-fonts ttf-dejavu-extra ttf-dejavu-core ttf-dejavu
-ttf-bpg-georgian-fonts ttf-alee
+ttf-bpg-georgian-fonts ttf-alee poppler-data xpdf-japanese
 
 preload curl tree rar xclip p7zip htop nmap traceroute unace unrar
 zip unzip p7zip-full p7zip-rar sharutils uudeview mpack lha arj cabextract
@@ -286,10 +286,25 @@ cd $cur_dir
 
 # Google App Engine
 # Version details: http://code.google.com/appengine/downloads.html
+echo "Installing Google App Engine in [$src_dir]..."
 cd $src_dir
 wget http://googleappengine.googlecode.com/files/google_appengine_1.3.3.zip
 unzip google_appengine_1.3.3.zip
 rm google_appengine_1.3.3.zip
+cd $cur_dir
+
+
+# MySQL WorkBench
+echo "Installing MySQL WorkBench..."
+cd /tmp/
+# There is a dependency with [libmysqlclient15off], which is not
+# available in Lucid, but you can get it from Karmic.
+# http://packages.ubuntu.com/karmic/amd64/libmysqlclient15off/download
+wget http://mirrors.kernel.org/ubuntu/pool/universe/m/mysql-dfsg-5.0/libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_amd64.deb
+dpkg -i libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_amd64.deb
+# New version info: http://wb.mysql.com/
+wget http://dev.mysql.com/get/Downloads/MySQLGUITools/mysql-workbench-oss-5.1.18a-1ubu904-amd64.deb/from/http://ftp.jaist.ac.jp/pub/mysql/
+dpkg -i mysql-workbench-oss-5.1.18a-1ubu904-amd64.deb
 cd $cur_dir
 
 
