@@ -203,9 +203,9 @@ firefox https://addons.mozilla.org/en-US/firefox/addons/policy/0/3615/67442
 firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/4550/\
 platform:2/addon-4550-latest.xpi
 
-# YSlow
-https://addons.mozilla.org/en-US/firefox/downloads/latest/5369/\
-addon-5369-latest.xpi
+# Json View
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/10869/\
+addon-10869-latest.xpi?src=addondetail
 
 # ****************************************************
 # Manual Installation
