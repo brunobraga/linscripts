@@ -205,7 +205,30 @@ platform:2/addon-4550-latest.xpi
 
 # Json View
 firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/10869/\
-addon-10869-latest.xpi?src=addondetail
+addon-10869-latest.xpi
+
+# Page Speed (Firebug plugin)
+firefox https://dl-ssl.google.com/page-speed/current/page-speed.xpi
+
+# Firepicker
+firefox https://addons.mozilla.org/da/firefox/downloads/latest/15032/\
+addon-15032-latest.xpi
+
+# Firequery
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/12632/\
+addon-12632-latest.xpi
+
+# HttpFox
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/6647/\
+addon-6647-latest.xpi
+
+# firecookie
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/6683/\
+addon-6683-latest.xpi
+
+# FaviconizeTab
+firefox https://addons.mozilla.org/en-US/firefox/downloads/latest/3780/\
+addon-3780-latest.xpi
 
 # ****************************************************
 # Manual Installation
