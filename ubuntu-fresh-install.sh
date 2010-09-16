@@ -241,10 +241,11 @@ gem install rails
 # Virtual Box (with USB Support - non-free)
 # Version updates: http://www.virtualbox.org/wiki/Linux_Downloads
 cd /tmp/
-wget http://download.virtualbox.org/virtualbox/3.1.6/\
-virtualbox-3.1_3.1.6-59338_Ubuntu_karmic_amd64.deb
-dpkg -i virtualbox-3.1_3.1.6-59338_Ubuntu_karmic_amd64.deb
-rm -f virtualbox-3.1_3.1.6-59338_Ubuntu_karmic_amd64.deb
+[ "`uname -m`" == "x86_64" ] && temp=amd64 || temp=i386
+wget http://download.virtualbox.org/virtualbox/3.2.8/\
+virtualbox-3.2_3.2.8-64453~Ubuntu~lucid_$temp.deb
+dpkg -i virtualbox-3.2_3.2.8-64453~Ubuntu~lucid_$temp.deb
+rm -f virtualbox-3.2_3.2.8-64453~Ubuntu~lucid_$temp.deb
 cd $cur_dir
 
 # Skype (as of 2009/11/01 there is no skype on lucid repositories)
@@ -310,24 +311,27 @@ cd $cur_dir
 # Google App Engine
 # Version details: http://code.google.com/appengine/downloads.html
 echo "Installing Google App Engine in [$src_dir]..."
-cd $src_dir
-wget http://googleappengine.googlecode.com/files/google_appengine_1.3.3.zip
-unzip google_appengine_1.3.3.zip
-rm google_appengine_1.3.3.zip
+cd /tmp/
+wget http://googleappengine.googlecode.com/files/google_appengine_1.3.7.zip
+unzip google_appengine_1.3.7.zip
+rm google_appengine_1.3.7.zip
 cd $cur_dir
-
 
 # MySQL WorkBench
 echo "Installing MySQL WorkBench..."
 cd /tmp/
+[ "`uname -m`" == "x86_64" ] && temp=amd64 || temp=i386
 # There is a dependency with [libmysqlclient15off], which is not
 # available in Lucid, but you can get it from Karmic.
 # http://packages.ubuntu.com/karmic/amd64/libmysqlclient15off/download
-wget http://mirrors.kernel.org/ubuntu/pool/universe/m/mysql-dfsg-5.0/libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_amd64.deb
-dpkg -i libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_amd64.deb
+wget http://mirrors.kernel.org/ubuntu/pool/universe/m/mysql-dfsg-5.0/\
+libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_$temp.deb
+dpkg -i libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_$temp.deb
 # New version info: http://wb.mysql.com/
-wget http://dev.mysql.com/get/Downloads/MySQLGUITools/mysql-workbench-oss-5.1.18a-1ubu904-amd64.deb/from/http://ftp.jaist.ac.jp/pub/mysql/
-dpkg -i mysql-workbench-oss-5.1.18a-1ubu904-amd64.deb
+wget http://dev.mysql.com/get/Downloads/MySQLGUITools/\
+mysql-workbench-gpl-5.2.27-1ubu1004-$temp.deb/from/\
+http://ftp.jaist.ac.jp/pub/mysql/
+dpkg -i mysql-workbench-gpl-5.2.27-1ubu1004-$temp.deb
 cd $cur_dir
 
 
@@ -346,22 +350,9 @@ echo "Restarting Apache Server..."
 # Linux Setup updates
 # ****************************************************
 
-# NOT SURE HOW THIS IS WORKING ON LUCID NOW
-# Performance: Disable excessive ttys
-#echo "Disabling excessive TTYs for peformance..."
-#sed -i -e  's/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-6\]\
-#\"/ACTIVE\_CONSOLES\=\"\/dev\/tty\[1\-2\]\"/' /etc/default/console-setup
-
-
 # Performance: Decrease Swappiness for better RAM memory usage
 echo "Decresing swap for memory opmization (updating /etc/sysctl.conf file)..."
 echo "vm.swappiness=10" >> /etc/sysctl.conf
-
-# NOT SURE HOW THIS IS WORKING ON LUCID NOW
-# File system speed (disable access write to files/dirs)
-#echo "DANGEROUS: This will update the /etc/fstab file..."
-#sed -i -e 's/errors\=remount\-ro/noatime\,nodiratime\,errors\=remount\
-#\-ro/g' /etc/fstab
 
 # turn menu displaying faster
 echo "Creating file [~/.gtkrc-2.0] to make menus faster..."
@@ -402,6 +393,19 @@ export GTK_IM_MODULE=ibus
 export XMODIFIERS=@im=ibus
 export QT_IM_MODULE=ibus' >> ~/.bashrc
 
+# create auto-start for iBus
+echo '
+[Desktop Entry]
+Type=Application
+Exec=ibus-daemon -d
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=iBus
+Name=iBus
+Comment[en_US]=
+Comment=
+' > ~/.config/autostart/ibus-daemon.desktop
 
 # ****************************************************
 # ****************************************************
