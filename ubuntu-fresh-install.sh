@@ -3,7 +3,7 @@
 # File:       ubuntu-fresh-install.sh
 #
 # Purpose:    installation guide for my preferred applications
-#             for Ubuntu 10.04 64-bits (should also work for 32-bits)
+#             for Ubuntu 10.10 beta 64-bits (should also work for 32-bits)
 #
 # Author:     BRAGA, Bruno <bruno.braga@gmail.com>
 #
@@ -67,20 +67,20 @@ mkdir -p /usr/lib/X11/fonts/Type1
 
 echo "
 # Shutter application sources  (by $0, at `date`)
-deb http://ppa.launchpad.net/shutter/ppa/ubuntu lucid main
-deb-src http://ppa.launchpad.net/shutter/ppa/ubuntu lucid main
+deb http://ppa.launchpad.net/shutter/ppa/ubuntu $(lsb_release -cs) main
+deb-src http://ppa.launchpad.net/shutter/ppa/ubuntu $(lsb_release -cs) main
 
 # gdp application sources  (by $0, at `date`)
-deb http://ppa.launchpad.net/sinzui/ppa/ubuntu lucid main
-deb-src http://ppa.launchpad.net/sinzui/ppa/ubuntu lucid main
+deb http://ppa.launchpad.net/sinzui/ppa/ubuntu $(lsb_release -cs) main
+deb-src http://ppa.launchpad.net/sinzui/ppa/ubuntu $(lsb_release -cs) main
 
 # global-menu application sources  (by $0, at `date`)
 deb http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu lucid main
 deb-src http://ppa.launchpad.net/globalmenu-team/ppa/ubuntu lucid main
 
 # ubuntu-tweak application sources  (by $0, at `date`)
-deb http://ppa.launchpad.net/tualatrix/ppa/ubuntu lucid main
-deb-src http://ppa.launchpad.net/tualatrix/ppa/ubuntu lucid main
+deb http://ppa.launchpad.net/tualatrix/ppa/ubuntu $(lsb_release -cs) main
+deb-src http://ppa.launchpad.net/tualatrix/ppa/ubuntu $(lsb_release -cs) main
 
 # ubuntu commercial/partner sources  (by $0, at `date`)
 deb http://archive.canonical.com/ubuntu lucid partner
@@ -104,12 +104,12 @@ apt-get upgrade -y
 
 # Medibuntu sources
 # source: https://help.ubuntu.com/community/Medibuntu
-wget --output-document=/etc/apt/sources.list.d/medibuntu.list \
-http://www.medibuntu.org/sources.list.d/$(lsb_release -cs).list
-apt-get --quiet update
-apt-get --yes --quiet --allow-unauthenticated install medibuntu-keyring
-apt-get --quiet update
-apt-get --yes install app-install-data-medibuntu apport-hooks-medibuntu
+#wget --output-document=/etc/apt/sources.list.d/medibuntu.list \
+#http://www.medibuntu.org/sources.list.d/$(lsb_release -cs).list
+#apt-get --quiet update
+#apt-get --yes --quiet --allow-unauthenticated install medibuntu-keyring
+#apt-get --quiet update
+#apt-get --yes install app-install-data-medibuntu apport-hooks-medibuntu
 
 
 # ****************************************************
@@ -119,6 +119,7 @@ apt-get --yes install app-install-data-medibuntu apport-hooks-medibuntu
 
 echo "Installing preferred applications..."
 
+# unavailable in Maverik: xpdf-japanese libmpcdec3
 packages="
 ibus ibus-table ibus-gtk ibus-pinyin ibus-anthy
 nautilus-actions compizconfig-settings-manager nautilus-gksu
@@ -130,11 +131,13 @@ phatch subtitleeditor checkgmail
 inkscape gimp gimp-data gimp-plugin-registry
 bootchart gparted meld grsync vim-gnome
 firefox opera chromium-browser
+sshmenu
+pidgin pidgin-themes pidgin-libnotify pidgin-guifications pidgin-data
 
 ffmpeg libxvidcore-dev libmp3lame-dev libfaac-dev libfaad-dev libgsm1-dev
 libvorbis-dev libdc1394-22-dev libxine1-ffmpeg gxine mencoder mpeg2dec
 vorbis-tools id3v2 mpg321 mpg123 libflac++6 libmp4v2-0 totem-mozilla icedax
-tagtool easytag id3tool lame libmad0 libjpeg-progs libmpcdec3 libquicktime1
+tagtool easytag id3tool lame libmad0 libjpeg-progs libquicktime1
 flac faac faad sox ffmpeg2theora libmpeg2-4 uudeview flac libmpeg3-1
 mpeg3-utils mpegdemux liba52-dev gstreamer0.10-gnonlin gstreamer0.10-sdl
 gstreamer0.10-plugins-bad-multiverse gstreamer0.10-schroedinger
@@ -147,7 +150,7 @@ tv-fonts ttf-tuffy ttf-sjfonts ttf-sil-padauk ttf-sil-ezra ttf-paktype
 ttf-georgewilliams ttf-fifthhorseman-dkg-handwriting ttf-farsiweb
 ttf-essays1743 ttf-opensymbol ttf-nafees ttf-mgopen ttf-freefont ttf-dustin
 ttf-devanagari-fonts ttf-dejavu-extra ttf-dejavu-core ttf-dejavu
-ttf-bpg-georgian-fonts ttf-alee poppler-data xpdf-japanese
+ttf-bpg-georgian-fonts ttf-alee poppler-data 
 
 preload curl tree rar xclip p7zip htop nmap traceroute unace unrar
 zip unzip p7zip-full p7zip-rar sharutils uudeview mpack lha arj cabextract
@@ -164,6 +167,7 @@ git-core git-email python-django openssh-server
 ubuntu-tweak gedit-developer-plugins gnome-globalmenu shutter
 sun-java6-jre sun-java6-plugin  sun-java6-fonts
 
+libqt4-xml libqt4-dbus libqt4-network libqt4-opengl libqtcore4 libqtgui4
 "
 
 # Install everything
@@ -254,7 +258,7 @@ echo "Installing [Skype Packages]..."
 cd /tmp/
 wget http://www.skype.com/go/getskype-linux-beta-ubuntu-64
 apt-get install -f # fix dependencies problems
-dpkg -i skype*.deb
+dpkg -i getskype*
 rm -f skype*.deb
 cd $cur_dir
 
@@ -275,8 +279,8 @@ svn checkout svn://svn.ffmpeg.org/ffmpeg/trunk ffmpeg
 cd ffmpeg
 ./configure --enable-gpl --enable-nonfree --enable-libvorbis \
 --enable-libdc1394 --enable-libgsm --disable-debug --enable-libmp3lame \
---enable-libfaad --enable-libfaac --enable-libxvid --enable-pthreads \
---enable-libx264
+--enable-libfaac --enable-libxvid --enable-pthreads \
+--enable-libx264 --disable-yasm
 make
 make install
 cd $cur_dir
@@ -287,8 +291,8 @@ cd $cur_dir
 echo "Installing [Flash plugin for mozilla]..."
 cd /tmp/
 wget http://download.macromedia.com/pub/labs/flashplayer10/\
-libflashplayer-10.0.45.2.linux-x86_64.so.tar.gz
-tar -zxvf libflashplayer-10.0.45.2.linux-x86_64.so.tar.gz
+flashplayer_square_p1_64bit_linux_091510.tar.gz
+tar -zxvf flashplayer_square_p1_64bit_linux_091510.tar.gz
 cp libflashplayer.so /usr/lib/mozilla/plugins/
 cp libflashplayer.so /usr/lib/opera/plugins/
 cd $cur_dir
@@ -329,9 +333,10 @@ libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_$temp.deb
 dpkg -i libmysqlclient15off_5.1.30really5.0.83-0ubuntu3_$temp.deb
 # New version info: http://wb.mysql.com/
 wget http://dev.mysql.com/get/Downloads/MySQLGUITools/\
-mysql-workbench-gpl-5.2.27-1ubu1004-$temp.deb/from/\
-http://ftp.jaist.ac.jp/pub/mysql/
-dpkg -i mysql-workbench-gpl-5.2.27-1ubu1004-$temp.deb
+mysql-workbench-gpl-5.2.28-1ubu1004-$temp.deb/from/\
+http://ftp.jaist.ac.jp/pub/mysql/ \
+-o mysql-workbench-gpl-5.2.28-1ubu1004-$temp.deb
+dpkg -i mysql-workbench-gpl-5.2.28-1ubu1004-$temp.deb
 cd $cur_dir
 
 
@@ -393,7 +398,9 @@ export GTK_IM_MODULE=ibus
 export XMODIFIERS=@im=ibus
 export QT_IM_MODULE=ibus' >> ~/.bashrc
 
+
 # create auto-start for iBus
+mkdir -p ~/.config/autostart/
 echo '
 [Desktop Entry]
 Type=Application
