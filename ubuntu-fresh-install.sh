@@ -163,6 +163,7 @@ build-essential checkinstall cdbs devscripts dh-make fakeroot
 libxml-parser-perl check avahi-daemon
 ruby rubygems python2.6-dev
 git-core git-email python-django openssh-server
+terminator
 
 ubuntu-tweak gedit-developer-plugins gnome-globalmenu shutter
 sun-java6-jre sun-java6-plugin  sun-java6-fonts
