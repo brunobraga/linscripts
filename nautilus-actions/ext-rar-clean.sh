@@ -33,7 +33,7 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.02
+_version=0.03
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
 
@@ -187,7 +187,7 @@ function cleanup()
 
 function extract()
 {
-    arg=$1
+    arg="$@"
 
     if [ -f $arg ]; then
         fe=`echo $arg | awk -F . '{print $NF}'`
@@ -331,9 +331,11 @@ file(s)..."
                 # extract all available rar files
                 # (partitioned will be handled by RAR app automatically)
                 echo "Searching for rar files in directory [$arg]..."
+                IFS=$'\n' # change separator for spaced filenames
                 for f in `ls *.rar 2>/dev/null`; do
                     extract $f
                 done
+                unset IFS
         else
             # move to corresponding directory
             cd `dirname $arg`
