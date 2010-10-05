@@ -45,7 +45,7 @@ _clean_ext=
 _clean_file=
 _debug=0
 _args=
-_mv="mv -f"
+_mv="/bin/mv -f"
 # make sure the Trash already exists
 mkdir -p $_trash
 
@@ -142,7 +142,7 @@ function debug()
 
 function cleanup_extra()
 {
-    f=$1
+    f="$@"
 
     # clean up garbage
     debug "Current file [$f] contains: `rar lb $f`"
@@ -151,8 +151,10 @@ function cleanup_extra()
     if [ ! -z $_clean_ext ]; then
         debug "Cleaning up extracted files with extensions [$_clean_ext]..."
         # loop all files and search match extension provided
-        for f2 in `rar lb $f | egrep -i -e $_clean_ext`; do
-            $_mv $f2 $_trash
+        IFS=$'\n' # change separator for spaced filenames
+        for f2 in `rar lb "$f" | egrep -i -e $_clean_ext`; do
+            unset IFS
+            $_mv "$f2" "$_trash"
         done
     fi
 
@@ -160,27 +162,31 @@ function cleanup_extra()
     if [ ! -z $_clean_file ]; then
         debug "Cleaning up extracted files with filename in [$_clean_file]..."
         # loop all files and search match filename provided
-        for f2 in `rar lb $f | egrep -i -e $_clean_file`; do
-            $_mv $f2 $_trash
+        IFS=$'\n' # change separator for spaced filenames
+        for f2 in `rar lb "$f" | egrep -i -e $_clean_file`; do
+            unset IFS
+            $_mv "$f2" "$_trash"
         done
     fi
 }
 
 function cleanup()
 {
-    f=$1
+    f="$@"
 
     echo "Cleaning up [$f] rar file(s)..."
 
     # in case it is a partitioned rar (clean part rar files)
-    for f2 in `rar l -v $f | grep Volume | sed -e "s/Volume //g"`; do
-        cleanup_extra $f2
-        $_mv $f2 $_trash
+    IFS=$'\n' # change separator for spaced filenames
+    for f2 in `rar l -v "$f" | grep Volume | sed -e "s/Volume //g"`; do
+        unset IFS
+        cleanup_extra "$f2"
+        $_mv "$f2" "$_trash"
     done
 
     # if it is a single rar archive (just clean current file)
     cleanup_extra $f
-    $_mv $f $_trash 2>/dev/null
+    $_mv "$f" "$_trash" 2>/dev/null
 
     echo "Done."
 }
@@ -189,15 +195,13 @@ function extract()
 {
     arg="$@"
 
-    if [ -f $arg ]; then
+    if [ -f "$arg" ]; then
         fe=`echo $arg | awk -F . '{print $NF}'`
 
         # make sure it is a rar file
         if [ "$fe" == "rar" ]; then
-            # it is just a file
-            # extract it
             echo "Extracting [$arg] compressed file..."
-            rar e -y $arg && notify $arg info && cleanup $arg || \
+            rar e -y "$arg" && notify $arg info && cleanup "$arg" || \
             	echo "Failed to extract. Most probably the file is incomplete.\
  Just skipping..."
         else
@@ -242,7 +246,7 @@ function parse_args()
 			--debug | -d)
 				_debug=1
                 echo "Starting in DEBUG mode..."
-                _mv="mv -vf"
+                _mv="/bin/mv -vf"
 				shift 1;;
 			--clean-ext)
 				_clean_ext=$2
@@ -320,7 +324,9 @@ function main()
     echo "Starting to extract all RAR files in [$_args] directory(ies) and/or \
 file(s)..."
 
+    IFS=$'\n' # change separator for spaced filenames
     for arg in $_args; do
+        unset IFS
 
         echo "Examining argument [$arg]..."
         # validate directory
@@ -333,9 +339,10 @@ file(s)..."
                 echo "Searching for rar files in directory [$arg]..."
                 IFS=$'\n' # change separator for spaced filenames
                 for f in `ls *.rar 2>/dev/null`; do
-                    extract $f
+                    unset IFS
+                    extract "$f"
                 done
-                unset IFS
+                
         else
             # move to corresponding directory
             cd `dirname $arg`
