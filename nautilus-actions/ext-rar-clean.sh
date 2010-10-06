@@ -142,20 +142,21 @@ function debug()
 
 function cleanup_extra()
 {
-    f="$@"
+    fe="$@"
 
     # clean up garbage
-    debug "Current file [$f] contains: `rar lb $f`"
+    debug "Current file [$fe] contains: `rar lb $fe`"
 
     # handle [clean-ext] option
     if [ ! -z $_clean_ext ]; then
         debug "Cleaning up extracted files with extensions [$_clean_ext]..."
         # loop all files and search match extension provided
         IFS=$'\n' # change separator for spaced filenames
-        for f2 in `rar lb "$f" | egrep -i -e $_clean_ext`; do
+        for fe2 in `rar lb "$fe" | egrep -i -e $_clean_ext`; do
             unset IFS
-            $_mv "$f2" "$_trash"
+            $_mv "$fe2" "$_trash"
         done
+        unset IFS
     fi
 
     # handle [clean-file] option
@@ -163,10 +164,11 @@ function cleanup_extra()
         debug "Cleaning up extracted files with filename in [$_clean_file]..."
         # loop all files and search match filename provided
         IFS=$'\n' # change separator for spaced filenames
-        for f2 in `rar lb "$f" | egrep -i -e $_clean_file`; do
+        for fe2 in `rar lb "$fe" | egrep -i -e $_clean_file`; do
             unset IFS
-            $_mv "$f2" "$_trash"
+            $_mv "$fe2" "$_trash"
         done
+        unset IFS
     fi
 }
 
@@ -180,13 +182,19 @@ function cleanup()
     IFS=$'\n' # change separator for spaced filenames
     for f2 in `rar l -v "$f" | grep Volume | sed -e "s/Volume //g"`; do
         unset IFS
-        cleanup_extra "$f2"
-        $_mv "$f2" "$_trash"
+        # do not delete running rar just yet
+        if [ ! "$f" == "$f2" ]; then
+            debug "Cleaning up partial file [$f2]..."
+            cleanup_extra "$f2"
+            $_mv "$f2" "$_trash"
+        fi
     done
-
+    unset IFS
+    
     # if it is a single rar archive (just clean current file)
-    cleanup_extra $f
-    $_mv "$f" "$_trash" 2>/dev/null
+    debug "Cleaning up last file [$f]..."
+    cleanup_extra "$f"
+    $_mv "$f" "$_trash"
 
     echo "Done."
 }
@@ -342,7 +350,7 @@ file(s)..."
                     unset IFS
                     extract "$f"
                 done
-                
+                unset IFS
         else
             # move to corresponding directory
             cd `dirname $arg`
