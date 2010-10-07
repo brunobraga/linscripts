@@ -204,7 +204,7 @@ function extract()
     arg="$@"
 
     if [ -f "$arg" ]; then
-        fe=`echo $arg | awk -F . '{print $NF}'`
+        fe=`echo $arg | awk -F . '{print $NF}' | tr [:upper:] [:lower:]`
 
         # make sure it is a rar file
         if [ "$fe" == "rar" ]; then
@@ -346,7 +346,7 @@ file(s)..."
                 # (partitioned will be handled by RAR app automatically)
                 echo "Searching for rar files in directory [$arg]..."
                 IFS=$'\n' # change separator for spaced filenames
-                for f in `ls *.rar 2>/dev/null`; do
+                for f in `find . -iname "*.rar" -maxdepth 1 2>/dev/null`; do
                     unset IFS
                     extract "$f"
                 done
