@@ -346,7 +346,7 @@ file(s)..."
                 # (partitioned will be handled by RAR app automatically)
                 echo "Searching for rar files in directory [$arg]..."
                 IFS=$'\n' # change separator for spaced filenames
-                for f in `find . -iname "*.rar" -maxdepth 1 2>/dev/null`; do
+                for f in `find . -iname "*.rar" -maxdepth 1 2>/dev/null | sort`; do
                     unset IFS
                     extract "$f"
                 done
