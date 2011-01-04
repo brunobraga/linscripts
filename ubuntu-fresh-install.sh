@@ -60,6 +60,21 @@ cur_dir=`pwd`
 # prepare fonts directory
 mkdir -p /usr/lib/X11/fonts/Type1
 
+# ****************************************************
+# Remove Applications
+# ****************************************************
+echo "Removed unwanted default applications..."
+
+# unavailable in Maverik: xpdf-japanese libmpcdec3
+packages="
+tsclient evolution evolution-common evolution-plugins evolution-couchdb
+evolution-data-server-common evolution-exchange evolution-indicator
+evolution-webcal empathy empathy-common
+"
+# Remove everything
+for package in $packages; do
+    apt-get remove -y --force-yes -f $package
+done
 
 # ****************************************************
 # Add repository sources
@@ -150,7 +165,7 @@ tv-fonts ttf-tuffy ttf-sjfonts ttf-sil-padauk ttf-sil-ezra ttf-paktype
 ttf-georgewilliams ttf-fifthhorseman-dkg-handwriting ttf-farsiweb
 ttf-essays1743 ttf-opensymbol ttf-nafees ttf-mgopen ttf-freefont ttf-dustin
 ttf-devanagari-fonts ttf-dejavu-extra ttf-dejavu-core ttf-dejavu
-ttf-bpg-georgian-fonts ttf-alee poppler-data 
+ttf-bpg-georgian-fonts ttf-alee poppler-data
 
 preload curl tree rar xclip p7zip htop nmap traceroute unace unrar
 zip unzip p7zip-full p7zip-rar sharutils uudeview mpack lha arj cabextract
@@ -163,7 +178,7 @@ build-essential checkinstall cdbs devscripts dh-make fakeroot
 libxml-parser-perl check avahi-daemon
 ruby rubygems python2.6-dev
 git-core git-email python-django openssh-server
-terminator
+terminator gnome-rdp
 
 ubuntu-tweak gedit-developer-plugins gnome-globalmenu shutter
 sun-java6-jre sun-java6-plugin  sun-java6-fonts
