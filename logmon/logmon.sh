@@ -32,7 +32,7 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.14
+_version=0.15
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
@@ -43,6 +43,7 @@ _app_dir=`dirname $0`
 _verbose=off
 _run_silent=off
 _ignore_regex=
+_match_regex=
 _ignore=off
 _log=
 _exec=
@@ -69,10 +70,17 @@ Arguments:
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
               If not used, the default used will be \"/var/log/syslog\" file.
+
 Options:
+  -m  --match       the regular expression (grep) containing the matches to be 
+                    considered by this script. Add here any keywords or patterns
+                    you want the script to run the [exec] action. 
+                    See also --ignore option (cannot be used together).
+
   -i  --ignore      the regular expression (grep) containing the matches to be
                     ignored by this script. Add here any keywords or patterns
                     you want the script to skip the [exec] action.
+                    See also --match option (cannot be used together).
 
   -h, --help        prints this help information
 
@@ -238,6 +246,52 @@ applicable were found)."
 
 
 #
+# Function:     match
+#
+# Purpose:      sets a global variable _ignore to "off" if any of the values
+#               in source or message from the monitored log file contains
+#               certain expressions (to [exec] only stuff that matters).
+#
+# Arguments:    [src]  the source name (data coming from the monitored file)
+#               [msg]  the message info
+#
+function match()
+{
+    # reset gloval variable
+    _ignore=on
+
+    # input arguments
+    src=$1
+    msg=$2
+
+    # Match sources
+    if [ ! -z "$_match_regex" ]; then
+        if [ ! -z `echo $src | egrep -i "$_match_regex"` ]; then
+            _ignore=off
+            debug "Matched source [$src] due to regex filter \
+[$_match_regex]."
+        fi
+    fi
+
+    # Match messages
+    if [ ! -z "$_match_regex" ]; then
+        if [ ! -z "`echo $msg | egrep -i "$_match_regex"`" ]; then
+            _ignore=off
+            debug "Matched message [$msg] due to regex filter \
+[$_match_regex]."
+        fi
+    fi
+
+
+    # affect global variable
+    if [ "$_ignore" = "on" ];then
+        debug "source=[$src] msg=[$msg] is being ignored (no matching \
+rules applicable were found)."
+    fi
+}
+
+
+#
 # Function: validate_args
 #
 # Purpose:  validate arguments and set defaults, if applicable.
@@ -255,9 +309,18 @@ more details."
         exit 1
     fi
 
-    # ignore regex - no need
+    # ignore regex
     if [ -z "$_ignore_regex" ]; then
-        debug "No ignore regex pattern specified, monitoring all..."
+        debug "No ignore regex pattern specified."
+     else
+        debug "Using regex [$_ignore_regex] for ignoring criteria."
+   fi
+
+    # match regex
+    if [ -z "$_match_regex" ]; then
+        debug "No match regex pattern specified."
+    else
+        debug "Using regex [$_match_regex] for matching criteria."
     fi
 
     # exec
@@ -340,6 +403,9 @@ function main()
             debug "Found new entry in [$_log]."
             source=`fix_source "$source"`
             ignore "$source" "$message"
+            if [ ! "$_match_regex" == "" ]; then
+                match "$source" "$message"
+            fi
 		    if [ "$_ignore" = "off" ]; then
                 year=`date +%Y`
                 prepare_exec "$source"
@@ -376,7 +442,7 @@ source [$source]."
 # ---------
 
 # fix options order
-args=`getopt -o hsvi: -l help,silent,verbose,version,ignore: -- "$@"` || \
+args=`getopt -o hsvi:m: -l help,silent,verbose,version,ignore:,match: -- "$@"` || \
 ( usage && exit 1 )
 
 eval set -- "$args"
@@ -397,6 +463,14 @@ details."
 				exit 1
 			fi
 			_ignore_regex=$2
+			shift 2;;
+	    --match | -m)
+			if [ "$2" == "--" ]; then
+				echo "ERROR: Invalid option: [$1]. Try --help for more \
+details."
+				exit 1
+			fi
+			_match_regex=$2
 			shift 2;;
 		--verbose | -v)
 			_verbose=on
@@ -421,6 +495,12 @@ shift $[ $OPTIND - 1 ]
 # set the remaining arguments
 _base_exec=$1
 _log=$2
+
+if [ ! "$_match_regex" == "" -a ! "$_ignore_regex" == "" ]; then
+    echo "ERROR: Must use either -i or -m, but not both at the same time. \
+Try --help for more details."
+    exit 1
+fi
 
 main
 exit 0
