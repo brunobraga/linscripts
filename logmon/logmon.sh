@@ -32,7 +32,7 @@
 # ----------------------------
 # VERSION
 # ----------------------------
-_version=0.15
+_version=0.16
 
 
 # DO NOT EDIT ANYTHING BELOW THIS LINE!
@@ -41,7 +41,7 @@ _version=0.15
 _app_name=`basename $0 .sh`
 _app_dir=`dirname $0`
 _verbose=off
-_run_silent=off
+_run_raw=off
 _ignore_regex=
 _match_regex=
 _ignore=off
@@ -84,10 +84,8 @@ Options:
 
   -h, --help        prints this help information
 
-  -s, --silent      runs in silent mode.  This mode forces only the message
-                    entities to be passed along to the action with no extra
-                    formatting.  Use this mode if you want your action to
-                    handle the filtering and formatting.
+  -r, --raw         simply returns the raw line of the log without no extra
+                    formatting, piped to the [exec] action.
 
   -v, --verbose     more detailed data of what is going on, in case this
                     script is not running as daemon
@@ -406,13 +404,13 @@ function main()
             if [ ! "$_match_regex" == "" ]; then
                 match "$source" "$message"
             fi
-		    if [ "$_ignore" = "off" ]; then
+		    if [ "$_ignore" == "off" ]; then
                 year=`date +%Y`
                 prepare_exec "$source"
                 debug "Found new alarm. Executing action [$_exec] for source \
 [$source]..."
-                if [ $_run_silent = "on" ]; then
-           		   echo -e "$message" | eval $_exec
+                if [ $_run_raw == "on" ]; then
+           		   echo -e "$month $day $time $host $source $message" | eval $_exec
                    err=$?
                 else
                    echo -e "New entry in [$_log] log file: \n \
@@ -442,7 +440,7 @@ source [$source]."
 # ---------
 
 # fix options order
-args=`getopt -o hsvi:m: -l help,silent,verbose,version,ignore:,match: -- "$@"` || \
+args=`getopt -o hrvi:m: -l help,raw,verbose,version,ignore:,match: -- "$@"` || \
 ( usage && exit 1 )
 
 eval set -- "$args"
@@ -453,8 +451,8 @@ while [ $# -gt 0 ]; do
 		--help | -h)
 			usage
 			exit 0;;
-        --silent | -s)
-                _run_silent=on
+        --raw | -r)
+                _run_raw=on
                 shift 1;;
 		--ignore | -i)
 			if [ "$2" == "--" ]; then
