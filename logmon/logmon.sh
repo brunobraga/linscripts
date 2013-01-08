@@ -49,8 +49,8 @@ _log=
 _exec=
 _base_exec=
 
-function usage()
-{
+function usage() {
+
     echo "
 Usage: logmon [OPTIONS] [exec] [logfile]
 
@@ -66,6 +66,9 @@ Arguments:
                     __LOG__: the log file being monitored (complete path)
                     __SRC__: the source information being logged in file
                     __SRV__: the hostname where file is located
+                    __MSG__: the logged message
+                    __MDT__: the logged message's datetime
+                    __HOS__: the host of the logged message
 
   [logfile]   the log file to be monitored. It should be a syslog
               formatted file, or this script may not work properly.
@@ -74,12 +77,15 @@ Arguments:
 Options:
   -m  --match       the regular expression (grep) containing the matches to be 
                     considered by this script. Add here any keywords or patterns
-                    you want the script to run the [exec] action. 
+                    you want the script to run the [exec] action (case insensitive). 
                     See also --ignore option (cannot be used together).
+
+  -f, --format      Outputs the date format in %Y-%m-%d %H:%M:%S instead of 
+                    the default RFC3164.
 
   -i  --ignore      the regular expression (grep) containing the matches to be
                     ignored by this script. Add here any keywords or patterns
-                    you want the script to skip the [exec] action.
+                    you want the script to skip the [exec] action (case insensitive).
                     See also --match option (cannot be used together).
 
   -h, --help        prints this help information
@@ -113,8 +119,7 @@ the project Linscripts. More info at: http://code.google.com/p/linscripts/
 #
 # Purpose:      display current script version.
 #
-function version()
-{
+function version() {
     echo -e "\
 `basename $0` (linscripts) version $_version \
 \nCopyright (C) 2009 by Bruno Braga \
@@ -134,9 +139,11 @@ function version()
 #
 # Arguments:    [src] the source name (data coming from the monitored file)
 #
-function fix_source()
-{
-	src=$1
+function fix_source() {
+
+    local src last_digit new_src digits
+	
+    src=$1
 
 	last_digit=${src: -1:1}
 	if [ "$last_digit" = ":" ]; then
@@ -155,8 +162,10 @@ function fix_source()
 #
 # Arguments: 	[text]		the text to e printed on stdout by echo command
 #
-function printz()
-{
+function printz() {
+
+    local dt
+
 	# manipulate date for better printing
 	dt=`date +%Y-%m-%d\ %H:%M:%S.%N`
 	dt=${dt:0:23}
@@ -177,8 +186,7 @@ function printz()
 #
 # Arguments:    [text]      the text to e printed on stdout by printz function
 #
-function debug()
-{
+function debug() {
     # only print data if verbose option is set.
     if [ "$_verbose" = "on" ]; then
         printz $@
@@ -196,8 +204,10 @@ function debug()
 # Arguments:    [src]  the source name (data coming from the monitored file)
 #               [msg]  the message info
 #
-function ignore()
-{
+function ignore() {
+
+    local src msg
+
     # reset gloval variable
     _ignore=off
 
@@ -253,8 +263,10 @@ applicable were found)."
 # Arguments:    [src]  the source name (data coming from the monitored file)
 #               [msg]  the message info
 #
-function match()
-{
+function match() {
+
+    local src msg
+
     # reset gloval variable
     _ignore=on
 
@@ -294,8 +306,8 @@ rules applicable were found)."
 #
 # Purpose:  validate arguments and set defaults, if applicable.
 #
-function validate_args()
-{
+function validate_args() {
+
     # log file
     if [ -z "$_log" ]; then
         _log=/var/log/syslog
@@ -329,11 +341,10 @@ more details."
     fi
 }
 
-function check_already_running()
-{
+function check_already_running() {
+
     debug "Verifying if another instance of this script (with same \
 configuration is already running..."
-
 
     _lock=/tmp/$_app_name.`echo $_log | sed -e 's/\//_/g'`.lock
 
@@ -359,14 +370,22 @@ got stuck from a previous process that did not close as expected."
 #
 # Arguments:    [src] the source name (data coming from the monitored file)
 #
-function prepare_exec()
-{
-    src=$1
+function prepare_exec() {
+
+    local src hos mdt msg app_name log
+
+    mdt=$1
+    hos=$2    
+    src=$3
+    shift 3
+    msg=$@
 
     # fix / chars for sed
     src=`echo $src | sed -e 's/\//\\\\\//g'`
     app_name=`echo $_app_name | sed -e 's/\//\\\\\//g'`
     log=`echo $_log | sed -e 's/\//\\\\\//g'`
+    hos=`echo $hos | sed -e 's/\//\\\\\//g'`
+    msg=`echo $msg | sed -e 's/\//\\\\\//g'`
 
     # substitute string in exec accordingly
     _exec=$_base_exec
@@ -374,6 +393,9 @@ function prepare_exec()
     _exec=`echo $_exec | sed -e "s/__LOG__/$log/g"`
     _exec=`echo $_exec | sed -e "s/__SRC__/$src/g"`
     _exec=`echo $_exec | sed -e "s/__SRV__/$HOSTNAME/g"`
+    _exec=`echo $_exec | sed -e "s/__MDT__/$mdt/g"`
+    _exec=`echo $_exec | sed -e "s/__HOS__/$hos/g"`
+    _exec=`echo $_exec | sed -e "s/__MSG__/$msg/g"`
 }
 
 #
@@ -381,8 +403,10 @@ function prepare_exec()
 #
 # Purpose:  The entry point of this script.
 #
-function main()
-{
+function main() {
+    
+    local year formatted_date source month day time host source message err
+
     validate_args
 
     check_already_running
@@ -405,8 +429,13 @@ function main()
                 match "$source" "$message"
             fi
 		    if [ "$_ignore" == "off" ]; then
-                year=`date +%Y`
-                prepare_exec "$source"
+                if [ "$_format" == "on" ]; then
+                    year=`date +%Y`
+                    formatted_date=`date -d "$month $day $year $time" +"%Y-%m-%d %H:%M:%S"`
+                else
+                    formatted_date="$month $day $time"
+                fi
+                prepare_exec "$formatted_date" "$host" "$source" "$message"
                 debug "Found new alarm. Executing action [$_exec] for source \
 [$source]..."
                 if [ $_run_raw == "on" ]; then
@@ -414,7 +443,7 @@ function main()
                    err=$?
                 else
                    echo -e "New entry in [$_log] log file: \n \
-\n   Date: [`date -d \"$month $day $year $time\" +\"%Y-%m-%d %H:%M:%S\"`] \
+\n   Date: [$formatted_date] \
 \n   Host: [$host] \
 \n Source: [$source] \
 \nMessage: [$message]. \
@@ -440,7 +469,7 @@ source [$source]."
 # ---------
 
 # fix options order
-args=`getopt -o hrvi:m: -l help,raw,verbose,version,ignore:,match: -- "$@"` || \
+args=`getopt -o hrvfi:m: -l help,raw,verbose,version,format,ignore:,match: -- "$@"` || \
 ( usage && exit 1 )
 
 eval set -- "$args"
@@ -453,6 +482,9 @@ while [ $# -gt 0 ]; do
 			exit 0;;
         --raw | -r)
                 _run_raw=on
+                shift 1;;
+        --format | -f)
+                _format=on
                 shift 1;;
 		--ignore | -i)
 			if [ "$2" == "--" ]; then
