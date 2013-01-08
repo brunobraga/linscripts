@@ -83,7 +83,7 @@ function version()
 function usage()
 {
     echo "
-Usage: ext-rar-clean.sh [OPTIONS] [file1]...[dirN]
+Usage: `basename $0` [OPTIONS] [file1]...[dirN]
 
 Helper script used with Nautilus Actions, to provide quick extracting of rar
 files (rar and r0* partioned files) with clean up (to trash can).
@@ -110,11 +110,11 @@ Dependencies: rar
 Examples:
 
     (1) direct execution:
-        ext-rar-clean.sh /path/to/file/file.rar
-        ext-rar-clean.sh /path/to/dir/ --clean-ext \"txt|url\" -d
+        `basename $0` /path/to/file/file.rar
+        `basename $0` /path/to/dir/ --clean-ext \"txt|url\" -d
 
     (2) Add a new action in nautilus-actions application
-        script: xterm -e /path/to/ext-rar-clean.sh %M
+        script: xterm -e /path/to/`basename $0` %M
         and enable it to run on \"both files and folders\" as well.
 
 Author: BRAGA, Bruno.
